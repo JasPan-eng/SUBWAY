@@ -228,6 +228,21 @@ function setStatus(text) {
   status.textContent = text;
 }
 
+/** Percentile bounding box of the active rest positions (sim space). */
+function robustBox(rest, count, lo = 0.02, hi = 0.98) {
+  const box = new THREE.Box3();
+  const step = Math.max(1, Math.floor(count / 200000));
+  for (let axis = 0; axis < 3; axis++) {
+    const vals = [];
+    for (let i = 0; i < count; i += step) if (rest[i * 4 + 3] > 0.5) vals.push(rest[i * 4 + axis]);
+    vals.sort((a, b) => a - b);
+    if (!vals.length) return box.set(new THREE.Vector3(-0.5, -0.1, -0.1), new THREE.Vector3(0.5, 0.1, 0.1));
+    box.min.setComponent(axis, vals[Math.floor(lo * (vals.length - 1))]);
+    box.max.setComponent(axis, vals[Math.floor(hi * (vals.length - 1))]);
+  }
+  return box;
+}
+
 function applyModifiers() {
   if (!mesh) return;
   const list = [];
@@ -331,7 +346,9 @@ async function loadSplat(source) {
   splatCount = count;
   splatLabel = label;
   simBox = box.clone().applyMatrix4(objToSim);
-  ride.setBounds(simBox, simToWorld);
+  // The dolly uses a robust box (2nd..98th percentile per axis) so stray gaussians
+  // outside the car cannot push the eye line or the path off.
+  ride.setBounds(robustBox(rest, count), simToWorld);
   plexus.setTransform(simToWorld);
   plexus.setMorphEnabled(false);
   applyPlexus();
