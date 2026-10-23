@@ -24,7 +24,8 @@ import { createLook, LOOK_DEFAULTS } from "./look.js";
 import { createRide, RIDE_DEFAULTS } from "./ride.js";
 import { loadStandInPoints, buildStandIn, SUBWAY_DEFAULTS } from "./subway.js";
 
-const TRAINED_SPLAT = "/splats/subway.spz";
+/** Trained car, first one found wins (not in git; drop it into public/splats/). */
+const TRAINED_SPLATS = ["/splats/subway.spz", "/splats/subway.ply"];
 
 const app = document.getElementById("app");
 const status = document.getElementById("status");
@@ -236,18 +237,22 @@ function applyModifiers() {
   mesh.updateGenerator();
 }
 
-async function trainedSplatExists() {
-  try {
-    const res = await fetch(TRAINED_SPLAT, { method: "HEAD" });
-    return res.ok && !(res.headers.get("content-type") || "").includes("text/html");
-  } catch {
-    return false;
+async function findTrainedSplat() {
+  for (const url of TRAINED_SPLATS) {
+    try {
+      const res = await fetch(url, { method: "HEAD" });
+      if (res.ok && !(res.headers.get("content-type") || "").includes("text/html")) return url;
+    } catch {
+      /* try the next one */
+    }
   }
+  return null;
 }
 
 async function loadSource(source) {
   if (source === "subway") {
-    if (await trainedSplatExists()) return loadSplat({ url: TRAINED_SPLAT, label: "subway car (trained)" });
+    const url = await findTrainedSplat();
+    if (url) return loadSplat({ url, label: `subway car (trained, ${url.split(".").pop()})` });
     setStatus("no trained splat at public/splats/subway.spz yet — building the stand-in…");
     source = "standin";
   }
