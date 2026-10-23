@@ -13,13 +13,13 @@ export const RIDE_DEFAULTS = {
   autoRide: true,
   speed: 0.012, // progress per second when autoRide is on
   bounce: true, // ping-pong at the ends instead of stopping
-  eyeHeight: 0.56, // 0 = floor, 1 = ceiling
+  eyeHeight: 0.42, // 0 = bottom of the splat box, 1 = top (0.42 ≈ seated eye level in the car)
   lookYaw: 70, // degrees of yaw at the screen edge
   lookPitch: 28,
   lookEase: 4, // 1/s
   scrollGain: 0.00035, // progress per wheel pixel
   strokeDepth: 0.12, // sim units ahead of the camera for the stroke plane
-  fov: 72,
+  fov: 62,
   rock: 0.004, // carriage rock amplitude (sim units)
   rockRate: 1.1, // Hz
 };
