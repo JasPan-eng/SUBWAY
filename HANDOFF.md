@@ -119,7 +119,7 @@ eview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
   dirt opacity 0.02-0.05, reflection strength 0.08-0.15 night / 0.02-0.05 day; disable transparent depth writes and
   verify Spark/mesh compositing explicitly. Acceptance: reflections shift with view and stay inside openings,
   poles/benches occlude glass correctly, no sorting flashes at all five stops; exterior remains readable.
-- [ ] **T14 Give night lighting visible sources** (new `src/practicals.js`; wiring in `src/city.js` (exterior) and
+- [x] **T14 Give night lighting visible sources** (new `src/practicals.js`; wiring in `src/city.js` (exterior) and
   `src/main.js` (interior fit + GUI)). T8 rank 5. Web side only: emissive meshes where the light already is in the
   baked splat, plus sparse exterior lamps. (Baking matching spill into the training renders is a separate Fable job.)
   Everything below was measured by Fable; no exploration needed.
@@ -215,6 +215,10 @@ eview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
     day/night, no console errors, frame rate within 10 % of before. Fable verifies in the browser.
 
 Done:
+- [x] T14: practicals — Codex + Fable. Interior tubes on the measured fixture rows, route-anchored lamps/platform
+  lights/signals with billboard halos, off in daylight. Fable thinned platform lights to every 12 m (6 m read as an
+  airstrip). Still to do on the render side: bake matching interior spill into the training renders (Redshift) so
+  the splat's own highlights agree with the tubes; retune `interiorIntensity` after that.
 - [x] T15: Myrtle Av hero zone — Codex + Fable. Fable's changes on top of the Codex pass: 32 discard boxes with
   precomputed (cos, sin) (`uHeroRot`), tenements capped at the nearest 30 within 80 m, buildings scaled to the
   footprint on both axes (a uniform scale pushed wide blocks across the track), `stationOffset` 12 m (the generated
@@ -230,7 +234,7 @@ Done:
 
 ## Who is on what
 
-- Codex: T14 (practicals, running). Files: `src/practicals.js`, `src/city.js`, `src/main.js`.
+- Codex: free. Next candidates: T2 passengers scaffold, T3 sound, T5 mobile. Fable: T11 after the v2 render.
 - Fable: pipeline (renders, training, Krea 3D/2D generation), review of Codex commits in the browser, screenshots for T8, T6 after the Redshift day pass. Bounce fix done (7552696).
 - Owner: references (Are.na), passenger image direction, audio assets.
 

@@ -17,6 +17,7 @@ import { GLTFExtensionsPlugin, ReorientationPlugin } from "3d-tiles-renderer/plu
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { createStructure } from "./structure.js";
 import { createHero } from "./hero.js";
+import { createPracticals } from "./practicals.js";
 
 export const CITY_DEFAULTS = {
   enabled: true,
@@ -132,6 +133,7 @@ export function createCity(o) {
   };
   const structure = createStructure({ root, route, base: o.base, scene: o.scene, fogUniforms });
   const hero = createHero({ root, route, base: o.base, fogUniforms, tint, discardUniforms });
+  const practicals = createPracticals({ root, route });
   function nightMaterial(mat) {
     const m = new THREE.MeshBasicMaterial({ map: mat.map ?? null, color: tint.clone().multiplyScalar(p.brightness), fog: false });
     const uFade = { value: 0 };
@@ -221,6 +223,7 @@ gl_FragColor.rgb = mix(uCityFogColor, gl_FragColor.rgb, uFade);`,
   function applyLook() {
     structure.configure(p);
     hero.configure(p);
+    practicals.configure(p);
     tint.set(p.tint);
     for (const m of materials) m.color.copy(tint).multiplyScalar(p.brightness);
     fogUniforms.uCityFogColor.value.set(p.fogColor);
@@ -301,6 +304,7 @@ gl_FragColor.rgb = mix(uCityFogColor, gl_FragColor.rgb, uFade);`,
       }
       route.sample(journey * route.total, pt);
       structure.update(dt, journey * route.total);
+      practicals.update(dt, journey * route.total);
       hero.update(dt);
       // Local tiles frame after reorientation (measured): east = -X, up = +Y, north = +Z.
       P.set(-pt.x, 0, pt.y);
@@ -329,6 +333,7 @@ gl_FragColor.rgb = mix(uCityFogColor, gl_FragColor.rgb, uFade);`,
       return { station: st ? `${st.name} ${st.d >= 0 ? "+" : ""}${Math.round(st.d)} m` : "", route: `${Math.round(s)} / ${Math.round(route.total)} m` };
     },
     dispose() {
+      practicals.dispose();
       hero.dispose();
       structure.dispose();
       tiles.dispose();

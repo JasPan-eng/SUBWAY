@@ -28,6 +28,7 @@ import { createCity, CITY_DEFAULTS } from "./city.js";
 import { HERO_DEFAULTS } from "./hero.js";
 import { createStory } from "./story.js";
 import { createWindows } from "./windows.js";
+import { createInteriorPracticals, PRACTICALS_DEFAULTS } from "./practicals.js";
 import routeJ from "../data/route_j.json";
 
 /** Trained car, first one found wins (not in git; drop it into public/splats/). */
@@ -129,6 +130,7 @@ const settings = {
   look: { ...LOOK_DEFAULTS, title: "SUBWAY — J LINE", background: "#0b0d12", floor: false, hud: params.has("gui"), grainOpacity: 0.06, grainSize: 1.0, vignetteAmount: 0.28, vignetteStart: 70 },
   city: { ...CITY_DEFAULTS, auto: params.has("free") },
   hero: { ...HERO_DEFAULTS },
+  practicals: { ...PRACTICALS_DEFAULTS },
   windows: { enabled: true, reflectionNight: 0.2, reflectionDay: 0.05, dirt: 0.03 },
   rings: { ...RING_DEFAULTS },
   plexus: { ...PLEXUS_DEFAULTS, enabled: params.has("gui") && PLEXUS_DEFAULTS.enabled },
@@ -136,6 +138,8 @@ const settings = {
 };
 const windowGlass = createWindows(settings.windows);
 scene.add(windowGlass.object);
+const interiorPracticals = createInteriorPracticals(settings.practicals);
+scene.add(interiorPracticals.object);
 if (params.has("gui")) window.__subway = { THREE, scene, settings, windowGlass, camera, getCity: () => city };
 
 // ---------------------------------------------------------------- GUI
@@ -195,7 +199,9 @@ gCity.addColor(settings.city, "skyHorizon").onChange(applyCity);
 gCity.add(settings.city, "errorTarget", 2, 64, 1).onChange(applyCity);
 if (!city) gCity.close();
 function applyCity() {
-  city?.configure({ ...settings.city, hero: settings.hero });
+  city?.configure({ ...settings.city, hero: settings.hero, practicals: settings.practicals });
+  interiorPracticals.configure(settings.practicals);
+  interiorPracticals.update(story.enabled ? story.state.dayNight : settings.city.dayNight);
   relight.setAmount(settings.city.dayNight);
   relight.setGain(settings.city.dayGain ?? 1);
 }
@@ -216,6 +222,18 @@ gWin.add(settings.windows, "reflectionNight", 0, 1, 0.01);
 gWin.add(settings.windows, "reflectionDay", 0, 1, 0.01);
 gWin.add(settings.windows, "dirt", 0.02, 0.05, 0.001);
 gWin.close();
+
+const gPracticals = gui.addFolder("practicals (lights)");
+const applyPracticals = () => {
+  interiorPracticals.configure(settings.practicals);
+  city?.configure({ practicals: settings.practicals });
+};
+gPracticals.add(settings.practicals, "enabled").onChange(applyPracticals);
+gPracticals.add(settings.practicals, "interiorIntensity", 0, 4, 0.01).onChange(applyPracticals);
+gPracticals.add(settings.practicals, "exteriorIntensity", 0, 4, 0.01).onChange(applyPracticals);
+gPracticals.add(settings.practicals, "halo", 0, 3, 0.01).onChange(applyPracticals);
+gPracticals.add(settings.practicals, "lampSpacing", 20, 60, 1).onChange(applyPracticals);
+gPracticals.close();
 
 const gFlow = gui.addFolder("flow (spring sim)");
 gFlow.add(settings.flow, "enabled").onChange(applyFlow);
@@ -396,6 +414,7 @@ async function loadSource(source) {
 
 async function loadSplat(source) {
   windowGlass.clear();
+  interiorPracticals.clear();
   if (mesh) {
     scene.remove(mesh);
     mesh.dispose();
@@ -438,6 +457,7 @@ async function loadSplat(source) {
   mesh.position.copy(centre).multiplyScalar(-scale);
   mesh.updateMatrixWorld(true);
   windowGlass.fit(centre, scale);
+  interiorPracticals.fit(centre, scale);
 
   simToObject.makeTranslation(centre.x, centre.y, centre.z).multiply(new THREE.Matrix4().makeScale(1 / scale, 1 / scale, 1 / scale));
   simToWorld.multiplyMatrices(mesh.matrixWorld, simToObject);
@@ -594,6 +614,7 @@ renderer.setAnimationLoop(() => {
   }
   ride.update(dt, t);
   windowGlass.update(story.enabled ? story.state.dayNight : settings.city.dayNight);
+  interiorPracticals.update(story.enabled ? story.state.dayNight : settings.city.dayNight);
   flow.setStrokeOrigin(ride.strokeOrigin);
   city?.update(dt, camera, floorSimY);
   if (mesh) {
