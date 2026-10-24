@@ -25,7 +25,8 @@ import { createRide, RIDE_DEFAULTS } from "./ride.js";
 import { loadStandInPoints, buildStandIn, SUBWAY_DEFAULTS } from "./subway.js";
 
 /** Trained car, first one found wins (not in git; drop it into public/splats/). */
-const TRAINED_SPLATS = ["/splats/subway.spz", "/splats/subway.ply"];
+const BASE = import.meta.env.BASE_URL; // "/" in dev, "/<repo>/" on GitHub Pages
+const TRAINED_SPLATS = [`${BASE}splats/subway.spz`, `${BASE}splats/subway.ply`];
 
 const app = document.getElementById("app");
 const status = document.getElementById("status");

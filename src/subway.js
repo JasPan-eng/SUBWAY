@@ -10,7 +10,7 @@
 import * as THREE from "three";
 
 export const SUBWAY_DEFAULTS = {
-  pointsUrl: "/splats/standin_points.f32",
+  pointsUrl: `${import.meta.env.BASE_URL}splats/standin_points.f32`,
   splatSize: 0.018, // metres
   opacity: 0.85,
   seed: 5,
