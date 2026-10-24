@@ -26,6 +26,7 @@ import { createRide, RIDE_DEFAULTS } from "./ride.js";
 import { loadStandInPoints, buildStandIn, SUBWAY_DEFAULTS, CAR } from "./subway.js";
 import { createCity, CITY_DEFAULTS } from "./city.js";
 import { createStory } from "./story.js";
+import { createWindows } from "./windows.js";
 import routeJ from "../data/route_j.json";
 
 /** Trained car, first one found wins (not in git; drop it into public/splats/). */
@@ -126,10 +127,14 @@ const settings = {
   },
   look: { ...LOOK_DEFAULTS, title: "SUBWAY — J LINE", background: "#0b0d12", floor: false, hud: params.has("gui"), grainOpacity: 0.06, grainSize: 1.0, vignetteAmount: 0.28, vignetteStart: 70 },
   city: { ...CITY_DEFAULTS, auto: params.has("free") },
+  windows: { enabled: true, reflectionNight: 0.2, reflectionDay: 0.05, dirt: 0.03 },
   rings: { ...RING_DEFAULTS },
   plexus: { ...PLEXUS_DEFAULTS, enabled: params.has("gui") && PLEXUS_DEFAULTS.enabled },
   resetSim: () => flow.reset(),
 };
+const windowGlass = createWindows(settings.windows);
+scene.add(windowGlass.object);
+if (params.has("gui")) window.__subway = { scene, settings, windowGlass, camera };
 
 // ---------------------------------------------------------------- GUI
 const gui = new GUI({ title: "SUBWAY" });
@@ -192,6 +197,13 @@ function applyCity() {
   relight.setAmount(settings.city.dayNight);
   relight.setGain(settings.city.dayGain ?? 1);
 }
+
+const gWin = gui.addFolder("windows");
+gWin.add(settings.windows, "enabled");
+gWin.add(settings.windows, "reflectionNight", 0, 1, 0.01);
+gWin.add(settings.windows, "reflectionDay", 0, 1, 0.01);
+gWin.add(settings.windows, "dirt", 0.02, 0.05, 0.001);
+gWin.close();
 
 const gFlow = gui.addFolder("flow (spring sim)");
 gFlow.add(settings.flow, "enabled").onChange(applyFlow);
@@ -371,6 +383,7 @@ async function loadSource(source) {
 }
 
 async function loadSplat(source) {
+  windowGlass.clear();
   if (mesh) {
     scene.remove(mesh);
     mesh.dispose();
@@ -412,6 +425,7 @@ async function loadSplat(source) {
   mesh.scale.setScalar(scale);
   mesh.position.copy(centre).multiplyScalar(-scale);
   mesh.updateMatrixWorld(true);
+  windowGlass.fit(centre, scale);
 
   simToObject.makeTranslation(centre.x, centre.y, centre.z).multiply(new THREE.Matrix4().makeScale(1 / scale, 1 / scale, 1 / scale));
   simToWorld.multiplyMatrices(mesh.matrixWorld, simToObject);
@@ -567,6 +581,7 @@ renderer.setAnimationLoop(() => {
     }
   }
   ride.update(dt, t);
+  windowGlass.update(story.enabled ? story.state.dayNight : settings.city.dayNight);
   flow.setStrokeOrigin(ride.strokeOrigin);
   city?.update(dt, camera, floorSimY);
   if (mesh) {

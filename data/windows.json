@@ -1,0 +1,19 @@
+{
+  "units": "metres, trained car frame: x along car, y up, z mirrored from C4D",
+  "source": "window_boxes.json: cm / 100, z negated; hull-4_G and console_G ignored; hull-3_G omitted because its box spans both sides beyond the nominal car end and does not identify an aperture plane",
+  "edgeTrim": 0.02,
+  "interiorInset": 0.01,
+  "note": "Side selection bands split at the central door bounds to avoid overlapping panes. Individual mullion apertures are not supplied; rely on splat depth for intervening frames, pending visual verification.",
+  "apertures": [
+    { "id": "door-1a_G", "x": [-5.71, -4.60], "y": [2.37, 3.18], "z": 1.235 },
+    { "id": "door-1b_G", "x": [-5.71, -4.60], "y": [2.37, 3.18], "z": -1.235 },
+    { "id": "door-2a_G", "x": [-0.56, 0.56], "y": [2.37, 3.18], "z": 1.235 },
+    { "id": "door-2b_G", "x": [-0.56, 0.56], "y": [2.37, 3.18], "z": -1.235 },
+    { "id": "door-3a_G", "x": [4.60, 5.71], "y": [2.37, 3.18], "z": 1.235 },
+    { "id": "door-3b_G", "x": [4.60, 5.71], "y": [2.37, 3.18], "z": -1.235 },
+    { "id": "hull-1_G-left", "x": [-3.28, -0.56], "y": [2.38, 3.20], "z": 1.275 },
+    { "id": "hull-1_G-right", "x": [0.56, 3.28], "y": [2.38, 3.20], "z": 1.275 },
+    { "id": "hull-2_G-left", "x": [-3.28, -0.56], "y": [2.38, 3.20], "z": -1.275 },
+    { "id": "hull-2_G-right", "x": [0.56, 3.28], "y": [2.38, 3.20], "z": -1.275 }
+  ]
+}
