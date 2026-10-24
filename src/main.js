@@ -134,7 +134,7 @@ const settings = {
 };
 const windowGlass = createWindows(settings.windows);
 scene.add(windowGlass.object);
-if (params.has("gui")) window.__subway = { scene, settings, windowGlass, camera };
+if (params.has("gui")) window.__subway = { THREE, scene, settings, windowGlass, camera, getCity: () => city };
 
 // ---------------------------------------------------------------- GUI
 const gui = new GUI({ title: "SUBWAY" });

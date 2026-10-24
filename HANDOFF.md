@@ -114,7 +114,7 @@ eview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
   skyZenith #668ab4, skyHorizon #c8d4df. Compare after T11 or retune when its assets land; city settings do not
   repair baked interior lighting. Acceptance: matched S4/S5 captures retain shaded recesses and distinct metal,
   blue seats and floor; exterior remains brighter than shaded interior, no broad clipped patches, night unchanged.
-- [ ] **T13 Add restrained window glass cues** (new `src/windows.js`, wiring `src/main.js`). T8 rank 4:
+- [x] **T13 Add restrained window glass cues** (new `src/windows.js`, wiring `src/main.js`). T8 rank 4:
   fit planes to car apertures with subtle dirt and a view-dependent interior reflection proxy. Start Fresnel F0 0.04,
   dirt opacity 0.02-0.05, reflection strength 0.08-0.15 night / 0.02-0.05 day; disable transparent depth writes and
   verify Spark/mesh compositing explicitly. Acceptance: reflections shift with view and stay inside openings,
@@ -125,31 +125,64 @@ eview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
   2-4; reduce exterior emitters toward day. Bake matching interior spill into training renders; Three.js lights
   alone cannot relight baked splat RGB. Acceptance: sources agree with rail/seat highlights, night floor and seats
   remain readable, exterior lights have depth, no broad bloom wash and no luminous blobs in daylight.
-- [ ] **T15 Myrtle Av hero zone** (new `src/hero.js`, `data/myrtle_corner.json` (exists: OSM footprints + POIs in
-  route-local metres, x east, y north, origin = Myrtle Av-Broadway), assets `public/props/hero/*.glb` from Fable:
-  `myrtle_station.glb` (station house: mezzanine, glass-block elevator tower, stair; anchor at the origin, its long
-  axis along the route heading, deck top at rail height), `corner_fastfood.glb` (one-storey block, footprint id
-  250317334, 4.2 m), `bushwick_3storey.glb` (reused for the 3-storey footprints within 120 m of the origin that have
-  no dedicated asset). Codex: load each GLB once (GLTFLoader + DRACOLoader from `public/draco/`), measure its bounding
-  box, scale uniformly so its footprint matches the OSM footprint's oriented extents (longest edge -> model's longest
-  horizontal axis), rotate to the footprint's longest-edge heading, place at the footprint centroid at ground level
-  (ground = rail height - the tiles' `trackHeight` metres, see city.js), as children of the same root the tiles and
-  the el structure use. Give the hero meshes the tiles' tint/fog treatment (reuse the structure material patch). Then
-  discard Google tile fragments inside each hero footprint so the two never overlap: add a `uHeroBoxes[8]` (centre xz,
-  half extents, heading) uniform to the tile fog patch in city.js and `discard` fragments whose world xz falls inside
-  a box (world position needs a varying; the tiles' root transform is the same frame). Acceptance: from the car at the
-  Myrtle Av stop the station house and tower are seen outside the windows at true scale and position, hero buildings
-  replace the tile blobs on their footprints with no z-fighting, night/day tint matches the tiles, frame rate within
-  10% of before.
+- [ ] **T15 Myrtle Av hero zone** (new `src/hero.js`; wiring in `src/city.js`; a GUI folder in `src/main.js`).
+  Everything below was measured by Fable; no exploration needed.
+  - Data: `data/myrtle_corner.json` = `{ origin, buildings[], pois[] }`. `buildings[i]` = `{ id, x, y, dist, height,
+    levels, name, building, pts: [[x,y],...] (closed ring), businesses[] }`, route-local metres, x east, y north,
+    origin = the Myrtle Av-Broadway route point (`route.stations["Myrtle Av-Broadway"].s` = 810.9 m; `route.sample(s)`
+    gives `x,y,dx,dy` in the same frame; the route heading there is −31.5° from east). Sorted by `dist`.
+  - Assets (Draco + WebP, one mesh each, Y-up, arbitrary native scale; load with GLTFLoader + DRACOLoader from
+    `${base}draco/` exactly like `src/structure.js`): `public/props/hero/myrtle_station.glb` (whole station: platform
+    deck with railings on top, mezzanine under it, glass-block elevator tower and stair down to the street; long axis =
+    the platforms), `public/props/hero/corner_fastfood.glb` (one-storey corner block with roof units),
+    `public/props/hero/bushwick_3storey.glb` (brick 3-storey corner tenement with a shop at street level).
+  - Frame: the tiles' root (`root` in city.js) is at rail height, metres, east = −X, north = +Z. Follow structure.js:
+    one `THREE.Group` with `rotation.y = Math.PI` under `root`, then place in route coordinates as
+    `position.set(x, groundY, -y)` and yaw with `quaternion.setFromAxisAngle(up, atan2(dy, dx))`.
+  - Ground: the street around Myrtle sits at **y = −10.5 m** in the root frame (measured from the tile vertices:
+    5th percentile −8.4, minimum −11.2, rail deck at 0). Make it a setting `groundY` (default −10.5).
+  - Placement rules: (1) station house: centre on the Myrtle route point, long horizontal axis along the route heading,
+    scale uniformly so its total height = `stationHeight` (default 14 m), bottom at `groundY`; expose `stationLift`
+    (default 0 m) to nudge it up/down. (2) `corner_fastfood.glb` on footprint id 250317334 (centroid (20.7, −72.3),
+    OSM height 4.2 m). (3) `bushwick_3storey.glb` on every other footprint with `dist <= 120`, `height` between 8 and 14
+    m, and whose centroid is more than 12 m from the route centreline (sample the route every 5 m from s−150 to s+150
+    and take the min distance; this skips the odd OSM polygons mapped under the el, e.g. id 250408680 at 3.5 m).
+    For (2) and (3): take the footprint's longest edge as heading, the oriented extents along/across that edge as the
+    target size, scale the model uniformly so its longer horizontal extent matches the footprint's longer extent
+    (clamp the model height to 0.8–1.3 × OSM `height` by a second, vertical-only scale if needed), rotate to the edge
+    heading, place bottom at `groundY`, centre at the centroid. Share one geometry/material per GLB (`InstancedMesh`
+    for the 3-storey copies).
+  - Look: clone the tiles' treatment. `createHero({ root, route, base, fogUniforms, tint })` is created in
+    `createCity` right after `createStructure`; `hero.configure(p)` from `applyLook` (tint × brightness, like
+    `structure.configure`), `hero.update(dt)` from `update`, `hero.dispose()` from `dispose`. Use the same
+    onBeforeCompile fog/fade patch as structure.js (fade in over 400 ms once loaded) with its own
+    `customProgramCacheKey` (`"city-hero-fog-v1"`). Materials are lit (keep the GLB's MeshStandardMaterial) so the
+    structure's hemisphere/sun light them; the tiles stay unlit.
+  - Tile discard: hero meshes must replace, not overlap, the Google blobs. In `nightMaterial` add uniforms
+    `uHeroCount` (int), `uHeroBoxes[8]` (vec4: centre x, centre z, half length, half width, in ROOT frame, i.e. after
+    the π flip: x = −east, z = north) and `uHeroYaw[8]` (float, the box rotation about Y in the root frame), plus
+    `uRootInverse` (mat4, `root.matrixWorld` inverted, refreshed every frame in `update`). Vertex: `vRootPos =
+    (uRootInverse * modelMatrix * vec4(position,1)).xyz`. Fragment, before the fog lines: rotate `vRootPos.xz − centre`
+    by −yaw, `discard` when both |components| < half extents + 1.0 m and `vRootPos.y < 40.0`. Set the boxes from
+    hero.js once the footprints are known (station: length = scaled model length + 10 m, width = scaled model width
+    + 6 m; buildings: their oriented extents). Expose `discard` (bool, default true) on the hero settings.
+  - GUI (`src/main.js`): folder `hero (Myrtle Av)` with `enabled`, `discard`, `groundY` (−20..0), `stationHeight`
+    (8..20), `stationLift` (−5..5); `settings.hero = { enabled: true, discard: true, groundY: -10.5, stationHeight: 14,
+    stationLift: 0 }` passed through `city.configure({ hero: settings.hero })` → `hero.configure`.
+  - Acceptance: at the Myrtle stop (`?gui`, scroll to the third viewport, or `settings.city.journey = 0.5`) the station
+    deck, railings and tower are visible outside the windows at true scale, the fast-food block and the 3-storey
+    tenements stand on their footprints with the Google blobs gone underneath (no z-fighting), tint/fog follow
+    day/night, no console errors, frame rate within 10 % of before. Fable verifies in the browser.
 
 Done:
+- [x] T13: window glass planes (Fresnel + dirt) — Codex, e6e1e12
 - [x] T1: Fade city tiles in over 400 ms toward fog colour
 - [x] Day mode (Krea-relit colour variant + relight modifier) — Fable, 2737d90
 - [x] Ride UI: station sign, one-gesture boarding, route strip, captions, guided camera — Fable, 5fdbfb3
 
 ## Who is on what
 
-- Codex: T9 (running), then T7 when `public/props/el_bent.glb` exists, then T8 review, then T2. Files: `src/structure.js`, `public/props/`, `src/passengers.js`, `data/passengers.json`, `src/main.js` (wiring only).
+- Codex: T15 (hero zone, running). Files: `src/hero.js`, `src/city.js`, `src/main.js` (GUI wiring only).
 - Fable: pipeline (renders, training, Krea 3D/2D generation), review of Codex commits in the browser, screenshots for T8, T6 after the Redshift day pass. Bounce fix done (7552696).
 - Owner: references (Are.na), passenger image direction, audio assets.
 
