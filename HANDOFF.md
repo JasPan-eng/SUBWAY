@@ -60,12 +60,51 @@ Do not take a ticket that touches files another agent is editing (see **Who is o
   material at opacity 0 and ramp to 1 over ~400 ms (transform/opacity only, per-material `onBeforeCompile` already
   exists for fog: add a `uFade` uniform there). Acceptance: no visible pop when scrolling through Broadway; no console
   errors; frame rate unchanged.
-- [ ] **T2 Passenger billboards scaffold** (new `src/passengers.js`, data `data/passengers.json`). Camera-facing image
-  planes placed at seat and standing positions in sim space (car = 1 unit long, x along the car, y up, z across;
-  seat cushion height ~0.1 of the box, benches at |z| ~0.5 of half width). Load PNGs with alpha from
-  `public/passengers/`, fade in/out per stop via `story.state.stop` (crowd at Myrtle Av, a few elsewhere), no
-  images yet: ship with an empty JSON and a `?passengers=debug` mode that shows grey silhouettes so placement can be
-  checked. Acceptance: debug silhouettes sit on the seats at every stop; zero cost when the JSON is empty.
+- [ ] **T2 Passengers** (new `src/passengers.js`; data `data/passengers.json` (exists, 6 seat slots, no images yet);
+  wiring in `src/main.js`; images later in `public/passengers/`). T8 rank 9. Seated figures as image planes in the
+  car frame with contact shadows, presence per stop, and a debug silhouette mode so placement can be checked before
+  any photo exists. Everything below was measured by Fable from the splat; no exploration needed.
+  - **Car frame** (metres; x along the car, y up, z across; same frame as `data/windows.json`, fitted exactly like
+    `src/windows.js`: a `THREE.Group` in the scene, `fit(centre, scale)` → `position = -centre * scale`,
+    `scale = scale`, called in `loadSplat` right after `interiorPracticals.fit(centre, scale)`; `clear()` next to
+    `interiorPracticals.clear()`). Floor **y = 1.35**. Bench cushion top **y = 1.84**, cushion spans **|z| 0.70
+    (front edge, aisle side) to 1.15 (wall)**, centre |z| = 0.88. Benches run **x = −4.5 … −0.9 and 0.75 … 4.3** on
+    both sides (door gaps |x| < 0.7 and |x| > 4.4). Stanchions at **x = ±0.8, z = ±0.6** (bench ends by the centre
+    doors) and end bulkheads at x = ±6.4. Ceiling 3.85.
+  - **Data** `data/passengers.json`: `{ figures: [ { id, x, side: 1 | -1 (z sign: +1 = left bench), image: string |
+    null, height: 1.25, yaw: 0, presence: { flushing, broadway, myrtle, daybreak, kosciuszko } } ] }`. `presence`
+    values 0..1 per stop id (the ids in `STOPS` in `src/story.js`); `height` is the seated figure height in metres
+    from the floor; `image` is a file name under `public/passengers/` (PNG with alpha, figure cut out, seated, facing
+    the camera/aisle, feet at the bottom edge of the image) or `null`.
+  - **Placement**: a `PlaneGeometry` per figure, width = height × image aspect (debug: 0.62), bottom edge at the
+    floor (y = 1.35), centred at `x`, at **z = side × 0.78** (knees sit in front of the cushion), the plane facing the
+    aisle (normal toward z = 0, i.e. rotation.y = side > 0 ? π : 0 for a plane whose front is +z), plus a limited
+    yaw toward the camera each frame: compute the angle from the plane to the camera in the car's xz plane and
+    apply `clamp(angle, −0.35, 0.35)` rad on top of the base facing. No free billboarding (the ticket in T8 asks for
+    fixed seat-facing planes with limited yaw). Contact shadow: a second plane 0.70 × 0.55 m lying flat at
+    **y = 1.845** under each figure, centred at (x, side × 0.88), `MeshBasicMaterial` black, `transparent`,
+    `depthWrite: false`, opacity 0.2 × presence, with a radial-gradient alpha texture (canvas, 64 px) so it feathers.
+  - **Materials**: `MeshBasicMaterial({ map, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    toneMapped: false })`, `alphaTest: 0.02`, `renderOrder = 1002` (after glass 1000 and tubes 1001). Texture
+    `colorSpace = THREE.SRGBColorSpace`. Tint with day/night: `color` = lerp((0.78, 0.82, 0.95), (1, 1, 1), dayNight)
+    (fluorescent at night, neutral by day). Depth test stays on so the stanchions occlude figures if the splat
+    renderer writes depth; Fable verifies that in the browser.
+  - **Presence**: use `story.state.t` (continuous stop index 0..4) and `story.stops[i].id`: presence(t) = lerp of the
+    neighbouring stops' values with `THREE.MathUtils.smoothstep(t − i, 0, 1)`; material.opacity = presence; skip the
+    draw (`visible = false`) when presence < 0.01. Both `story` and the figures' `update(state, camera, dayNight)` are
+    called from the animation loop in main.js right after `interiorPracticals.update(...)`. Zero cost when
+    `figures` is empty: create no meshes, `update` returns at once.
+  - **Debug** `?passengers=debug` (`params.has("passengers")` style like `?gui`): every figure with `image: null`
+    gets a procedurally drawn grey seated silhouette (canvas 256 × 512: head circle, shoulders, torso to the seat,
+    thighs forward, shins down to the bottom edge, fill `rgba(170,170,180,0.85)`), so slots show without photos.
+    Without the flag, figures with `image: null` are skipped. Image loading: `THREE.TextureLoader` from
+    `${base}passengers/${image}`; on error warn once and fall back to the silhouette only in debug mode.
+  - **GUI** (`src/main.js`): folder `passengers` with `enabled`, `shadow` (0..0.5, default 0.2), `yawLimit`
+    (0..0.8, default 0.35), `tintNight` colour; `settings.passengers = { ...PASSENGER_DEFAULTS }`.
+  - Acceptance: with `?gui&passengers=debug`, at every stop the silhouettes sit on the benches with feet on the floor
+    and hips on the cushion line, shadows under them, the Myrtle stop shows all six and Kosciuszko one; the planes
+    turn only slightly as the camera looks around; nothing renders and no warnings appear when the JSON has no
+    figures or the flag is absent. No console errors. Fable verifies in the browser.
 - [ ] **T3 Sound layer** (new `src/sound.js`). Tap-to-enable (a small `Sound` toggle in the station sign and bottom
   right), ambient track rumble loop + door chime at stations, volume ducking at stops. Assets go in `public/audio/`
   (none yet; use a synthesized Web Audio rumble as placeholder). Respect autoplay rules. Acceptance: silent until
@@ -234,7 +273,7 @@ Done:
 
 ## Who is on what
 
-- Codex: free. Next candidates: T2 passengers scaffold, T3 sound, T5 mobile. Fable: T11 after the v2 render.
+- Codex: T2 (passengers, running). Files: `src/passengers.js`, `src/main.js`, `data/passengers.json`.
 - Fable: pipeline (renders, training, Krea 3D/2D generation), review of Codex commits in the browser, screenshots for T8, T6 after the Redshift day pass. Bounce fix done (7552696).
 - Owner: references (Are.na), passenger image direction, audio assets.
 
