@@ -7,14 +7,15 @@
  * car's +X, and translated so the current route point sits at the car. Scrubbing
  * the journey slides the city past the windows.
  *
- * Tile materials are replaced by unlit, tinted materials: there are no lights in
- * the splat scene and the capture is a daytime one, so the tint turns it into night.
+ * Tile materials are replaced by unlit, tinted materials; the daytime capture
+ * is tinted for night. The near-field steel uses lit PBR with the same tint/fog.
  */
 import * as THREE from "three";
 import { TilesRenderer } from "3d-tiles-renderer";
 import { GoogleCloudAuthPlugin } from "3d-tiles-renderer/plugins";
 import { GLTFExtensionsPlugin, ReorientationPlugin } from "3d-tiles-renderer/plugins";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { createStructure } from "./structure.js";
 
 export const CITY_DEFAULTS = {
   enabled: true,
@@ -122,6 +123,7 @@ export function createCity(o) {
   // Own exponential fog on the tile materials: a global scene.fog would also reach
   // Spark's splat shader, which does not support it and renders nothing.
   const fogUniforms = { uCityFogColor: { value: new THREE.Color(p.fogColor) }, uCityFogDensity: { value: 0 } };
+  const structure = createStructure({ root, route, base: o.base, scene: o.scene, fogUniforms });
   function nightMaterial(mat) {
     const m = new THREE.MeshBasicMaterial({ map: mat.map ?? null, color: tint.clone().multiplyScalar(p.brightness), fog: false });
     const uFade = { value: 0 };
@@ -196,6 +198,7 @@ export function createCity(o) {
   const sideways = new THREE.Vector3();
 
   function applyLook() {
+    structure.configure(p);
     tint.set(p.tint);
     for (const m of materials) m.color.copy(tint).multiplyScalar(p.brightness);
     fogUniforms.uCityFogColor.value.set(p.fogColor);
@@ -275,6 +278,7 @@ export function createCity(o) {
         p.journey = journey;
       }
       route.sample(journey * route.total, pt);
+      structure.update(dt, journey * route.total);
       // Local tiles frame after reorientation (measured): east = -X, up = +Y, north = +Z.
       P.set(-pt.x, 0, pt.y);
       dir.set(-pt.dx, 0, pt.dy).normalize();
@@ -301,6 +305,7 @@ export function createCity(o) {
       return { station: st ? `${st.name} ${st.d >= 0 ? "+" : ""}${Math.round(st.d)} m` : "", route: `${Math.round(s)} / ${Math.round(route.total)} m` };
     },
     dispose() {
+      structure.dispose();
       tiles.dispose();
       o.scene.remove(root);
       o.scene.remove(sky);

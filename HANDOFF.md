@@ -5,6 +5,7 @@ Read this first. Update the **Task queue** and **Status** when you finish someth
 
 ## Status (2026-10-25 02:00)
 
+- T7 implemented (uncommitted): instanced near-field el, shared city transform/tint/fog, 250 m window and fades. Browser acceptance pending: confirm GLB Y-up, longest horizontal axis follows rails, and bounding-box top is rail height.
 - Live: https://jaspan-eng.github.io/SUBWAY/ (GitHub Pages, deploys from `main` via `.github/workflows/pages.yml`).
 - Latest commits: `5fdbfb3` the ride UI (station sign, route strip, captions), `2737d90` day mode (Krea-relit colour variant).
 - Assets in git: `public/splats/subway.spz` (night car, 12.3 MB, 530,657 gaussians), `public/splats/subway_day.spz` (same
@@ -74,7 +75,7 @@ Do not take a ticket that touches files another agent is editing (see **Who is o
 - [ ] **T5 Mobile pass** (`index.html`). Test at 375x812: strip, captions, sign. Touch scroll boards and rides.
 - [ ] **T6 Day look** (`src/city.js`, `settings.city.dayGain`). dayGain 1.25 -> ~1.1; day sky/fog values tuned against
   the Krea day colours; keep night untouched.
-- [ ] **T7 Near-field elevated structure** (new `src/structure.js`, assets in `public/props/`). The Google tiles are
+- [x] **T7 Near-field elevated structure** (implemented; browser verification pending) (new `src/structure.js`, assets in `public/props/`). The Google tiles are
   far-field only; the steel el under and beside the car is what sells the ride. Fable generates a repeating "bent" of
   the Broadway el with Hunyuan3D (`public/props/el_bent.glb`, PBR, reference image in
   `E:\THESIS REVAMP\SUBWAY\Project Files\Refs\krea3d\el_girder_ref.png`). Codex: (1) optimise the GLB for the web
