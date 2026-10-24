@@ -89,7 +89,8 @@ Do not take a ticket that touches files another agent is editing (see **Who is o
   instances within ~250 m of the car are drawn. Acceptance: from inside the car the girders and columns pass under the
   windows at the right scale at every stop, no pop, frame rate within 10% of before, GLB cached by the browser.
 - [ ] **T8 Realism review** (no code). Fable captures 6 screenshots of the ride (night, el, Myrtle, dawn, day, end) into
-  `E:\THESIS REVAMP\SUBWAY\Project Files\Refseview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
+  `E:\THESIS REVAMP\SUBWAY\Project Files\Refs
+eview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
   side by side (`codex --image`) and writes a ranked list of the 10 things that most break realism, each with a concrete
   fix (values, files), appended to this queue as tickets. Codex acts as the realism supervisor for the following tickets.
 - [ ] **T9 Reference library** (running, Codex): public YouTube J-line window footage frames + Wikimedia/NYPL/LoC stills
@@ -124,6 +125,22 @@ Do not take a ticket that touches files another agent is editing (see **Who is o
   2-4; reduce exterior emitters toward day. Bake matching interior spill into training renders; Three.js lights
   alone cannot relight baked splat RGB. Acceptance: sources agree with rail/seat highlights, night floor and seats
   remain readable, exterior lights have depth, no broad bloom wash and no luminous blobs in daylight.
+- [ ] **T15 Myrtle Av hero zone** (new `src/hero.js`, `data/myrtle_corner.json` (exists: OSM footprints + POIs in
+  route-local metres, x east, y north, origin = Myrtle Av-Broadway), assets `public/props/hero/*.glb` from Fable:
+  `myrtle_station.glb` (station house: mezzanine, glass-block elevator tower, stair; anchor at the origin, its long
+  axis along the route heading, deck top at rail height), `corner_fastfood.glb` (one-storey block, footprint id
+  250317334, 4.2 m), `bushwick_3storey.glb` (reused for the 3-storey footprints within 120 m of the origin that have
+  no dedicated asset). Codex: load each GLB once (GLTFLoader + DRACOLoader from `public/draco/`), measure its bounding
+  box, scale uniformly so its footprint matches the OSM footprint's oriented extents (longest edge -> model's longest
+  horizontal axis), rotate to the footprint's longest-edge heading, place at the footprint centroid at ground level
+  (ground = rail height - the tiles' `trackHeight` metres, see city.js), as children of the same root the tiles and
+  the el structure use. Give the hero meshes the tiles' tint/fog treatment (reuse the structure material patch). Then
+  discard Google tile fragments inside each hero footprint so the two never overlap: add a `uHeroBoxes[8]` (centre xz,
+  half extents, heading) uniform to the tile fog patch in city.js and `discard` fragments whose world xz falls inside
+  a box (world position needs a varying; the tiles' root transform is the same frame). Acceptance: from the car at the
+  Myrtle Av stop the station house and tower are seen outside the windows at true scale and position, hero buildings
+  replace the tile blobs on their footprints with no z-fighting, night/day tint matches the tiles, frame rate within
+  10% of before.
 
 Done:
 - [x] T1: Fade city tiles in over 400 ms toward fog colour
