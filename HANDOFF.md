@@ -92,7 +92,7 @@ Do not take a ticket that touches files another agent is editing (see **Who is o
   side by side (`codex --image`) and writes a ranked list of the 10 things that most break realism, each with a concrete
   fix (values, files), appended to this queue as tickets. Codex acts as the realism supervisor for the following tickets.
 - [ ] **T9 Reference library** (running, Codex): public YouTube J-line window footage frames + Wikimedia/NYPL/LoC stills
-  into `E:\THESIS REVAMP\SUBWAY\Project Files\Refs\jline\`, with `refs.md` and a contact sheet.
+  into `Web\subway-splat\refs\jline\ (git-ignored)`, with `refs.md` and a contact sheet.
 
 Done:
 - [x] T1: Fade city tiles in over 400 ms toward fog colour
