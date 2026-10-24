@@ -125,7 +125,7 @@ eview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
   2-4; reduce exterior emitters toward day. Bake matching interior spill into training renders; Three.js lights
   alone cannot relight baked splat RGB. Acceptance: sources agree with rail/seat highlights, night floor and seats
   remain readable, exterior lights have depth, no broad bloom wash and no luminous blobs in daylight.
-- [ ] **T15 Myrtle Av hero zone** (new `src/hero.js`; wiring in `src/city.js`; a GUI folder in `src/main.js`).
+- [x] **T15 Myrtle Av hero zone** (new `src/hero.js`; wiring in `src/city.js`; a GUI folder in `src/main.js`).
   Everything below was measured by Fable; no exploration needed.
   - Data: `data/myrtle_corner.json` = `{ origin, buildings[], pois[] }`. `buildings[i]` = `{ id, x, y, dist, height,
     levels, name, building, pts: [[x,y],...] (closed ring), businesses[] }`, route-local metres, x east, y north,
@@ -175,6 +175,14 @@ eview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
     day/night, no console errors, frame rate within 10 % of before. Fable verifies in the browser.
 
 Done:
+- [x] T15: Myrtle Av hero zone — Codex + Fable. Fable's changes on top of the Codex pass: 32 discard boxes with
+  precomputed (cos, sin) (`uHeroRot`), tenements capped at the nearest 30 within 80 m, buildings scaled to the
+  footprint on both axes (a uniform scale pushed wide blocks across the track), `stationOffset` 12 m (the generated
+  station is one 22 x 19.5 m block; centred on the track its deck swallowed the car) and `stationLift` 1.2 so the deck
+  top is at platform height, station discard box widened across the track (removes the torn Google slab there).
+  Unverified: frame rate (Redshift was saturating the GPU: 2-3 fps with the hero on or off). Follow-ups: hero
+  materials look flat dark grey from outside at night (lighting/tint for lit materials), a longer station model
+  (the real platforms are ~150 m), per-window exterior framing at the stop (camera look toward the platform).
 - [x] T13: window glass planes (Fresnel + dirt) — Codex, e6e1e12
 - [x] T1: Fade city tiles in over 400 ms toward fog colour
 - [x] Day mode (Krea-relit colour variant + relight modifier) — Fable, 2737d90
@@ -182,7 +190,7 @@ Done:
 
 ## Who is on what
 
-- Codex: T15 (hero zone, running). Files: `src/hero.js`, `src/city.js`, `src/main.js` (GUI wiring only).
+- Codex: free. Next candidates: T14 night practicals, T2 passengers scaffold. Fable: T11 after the v2 render.
 - Fable: pipeline (renders, training, Krea 3D/2D generation), review of Codex commits in the browser, screenshots for T8, T6 after the Redshift day pass. Bounce fix done (7552696).
 - Owner: references (Are.na), passenger image direction, audio assets.
 

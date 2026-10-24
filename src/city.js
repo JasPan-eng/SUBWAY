@@ -16,6 +16,7 @@ import { GoogleCloudAuthPlugin } from "3d-tiles-renderer/plugins";
 import { GLTFExtensionsPlugin, ReorientationPlugin } from "3d-tiles-renderer/plugins";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { createStructure } from "./structure.js";
+import { createHero } from "./hero.js";
 
 export const CITY_DEFAULTS = {
   enabled: true,
@@ -123,25 +124,45 @@ export function createCity(o) {
   // Own exponential fog on the tile materials: a global scene.fog would also reach
   // Spark's splat shader, which does not support it and renders nothing.
   const fogUniforms = { uCityFogColor: { value: new THREE.Color(p.fogColor) }, uCityFogDensity: { value: 0 } };
+  const discardUniforms = {
+    uHeroCount: { value: 0 },
+    uHeroBoxes: { value: Array.from({ length: 32 }, () => new THREE.Vector4()) },
+    uHeroRot: { value: Array.from({ length: 32 }, () => new THREE.Vector2(1, 0)) }, // (cos, sin) of each box yaw
+    uRootInverse: { value: new THREE.Matrix4() },
+  };
   const structure = createStructure({ root, route, base: o.base, scene: o.scene, fogUniforms });
+  const hero = createHero({ root, route, base: o.base, fogUniforms, tint, discardUniforms });
   function nightMaterial(mat) {
     const m = new THREE.MeshBasicMaterial({ map: mat.map ?? null, color: tint.clone().multiplyScalar(p.brightness), fog: false });
     const uFade = { value: 0 };
     fadingMaterials.push({ material: m, uniform: uFade, progress: 0 });
     m.onBeforeCompile = (shader) => {
-      Object.assign(shader.uniforms, fogUniforms);
+      Object.assign(shader.uniforms, fogUniforms, discardUniforms);
       shader.uniforms.uFade = uFade;
-      const V = "varying float vCityDepth;";
+      const V = "varying float vCityDepth;\nvarying vec3 vRootPos;";
       shader.vertexShader = shader.vertexShader
-        .replace("#include <common>", `#include <common>\n${V}`)
-        .replace("#include <project_vertex>", "#include <project_vertex>\nvCityDepth = -mvPosition.z;");
+        .replace("#include <common>", `#include <common>\n${V}\nuniform mat4 uRootInverse;`)
+        .replace("#include <project_vertex>", "#include <project_vertex>\nvCityDepth = -mvPosition.z;\nvRootPos = (uRootInverse * modelMatrix * vec4(position, 1.0)).xyz;");
       shader.fragmentShader = shader.fragmentShader
-        .replace("#include <common>", `#include <common>\n${V}\nuniform vec3 uCityFogColor;\nuniform float uCityFogDensity;\nuniform float uFade;`)
+        .replace("#include <common>", `#include <common>\n${V}\nuniform vec3 uCityFogColor;\nuniform float uCityFogDensity;\nuniform float uFade;\nuniform int uHeroCount;\nuniform vec4 uHeroBoxes[32];\nuniform vec2 uHeroRot[32];`)
         .replace(
           "#include <dithering_fragment>",
-          "#include <dithering_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uCityFogColor, 1.0 - exp(-uCityFogDensity * vCityDepth));\ngl_FragColor.rgb = mix(uCityFogColor, gl_FragColor.rgb, uFade);",
+          `#include <dithering_fragment>
+if (vRootPos.y < 40.0) {
+  for (int i = 0; i < 8; i++) {
+    if (i >= uHeroCount) break;
+    vec2 delta = vRootPos.xz - uHeroBoxes[i].xy;
+    float c = uHeroRot[i].x, s = uHeroRot[i].y;
+    // Inverse of Three.js rotation about +Y, restricted to the XZ plane.
+    vec2 local = vec2(c * delta.x - s * delta.y, s * delta.x + c * delta.y);
+    if (all(lessThan(abs(local), uHeroBoxes[i].zw + vec2(1.0)))) discard;
+  }
+}
+gl_FragColor.rgb = mix(gl_FragColor.rgb, uCityFogColor, 1.0 - exp(-uCityFogDensity * vCityDepth));
+gl_FragColor.rgb = mix(uCityFogColor, gl_FragColor.rgb, uFade);`,
         );
     };
+    m.customProgramCacheKey = () => "city-tile-hero-fog-v1";
     m.userData.city = true;
     materials.add(m);
     return m;
@@ -199,6 +220,7 @@ export function createCity(o) {
 
   function applyLook() {
     structure.configure(p);
+    hero.configure(p);
     tint.set(p.tint);
     for (const m of materials) m.color.copy(tint).multiplyScalar(p.brightness);
     fogUniforms.uCityFogColor.value.set(p.fogColor);
@@ -279,6 +301,7 @@ export function createCity(o) {
       }
       route.sample(journey * route.total, pt);
       structure.update(dt, journey * route.total);
+      hero.update(dt);
       // Local tiles frame after reorientation (measured): east = -X, up = +Y, north = +Z.
       P.set(-pt.x, 0, pt.y);
       dir.set(-pt.dx, 0, pt.dy).normalize();
@@ -292,6 +315,7 @@ export function createCity(o) {
       // Rails sit floorAboveRail below the car floor.
       root.position.y += floorSimY - p.floorAboveRail * scale;
       root.updateMatrixWorld(true);
+      discardUniforms.uRootInverse.value.copy(root.matrixWorld).invert();
 
       camera.updateMatrixWorld();
       sky.position.copy(camera.position);
@@ -305,6 +329,7 @@ export function createCity(o) {
       return { station: st ? `${st.name} ${st.d >= 0 ? "+" : ""}${Math.round(st.d)} m` : "", route: `${Math.round(s)} / ${Math.round(route.total)} m` };
     },
     dispose() {
+      hero.dispose();
       structure.dispose();
       tiles.dispose();
       o.scene.remove(root);

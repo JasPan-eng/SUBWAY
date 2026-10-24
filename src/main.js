@@ -25,6 +25,7 @@ import { createLook, LOOK_DEFAULTS } from "./look.js";
 import { createRide, RIDE_DEFAULTS } from "./ride.js";
 import { loadStandInPoints, buildStandIn, SUBWAY_DEFAULTS, CAR } from "./subway.js";
 import { createCity, CITY_DEFAULTS } from "./city.js";
+import { HERO_DEFAULTS } from "./hero.js";
 import { createStory } from "./story.js";
 import { createWindows } from "./windows.js";
 import routeJ from "../data/route_j.json";
@@ -127,6 +128,7 @@ const settings = {
   },
   look: { ...LOOK_DEFAULTS, title: "SUBWAY — J LINE", background: "#0b0d12", floor: false, hud: params.has("gui"), grainOpacity: 0.06, grainSize: 1.0, vignetteAmount: 0.28, vignetteStart: 70 },
   city: { ...CITY_DEFAULTS, auto: params.has("free") },
+  hero: { ...HERO_DEFAULTS },
   windows: { enabled: true, reflectionNight: 0.2, reflectionDay: 0.05, dirt: 0.03 },
   rings: { ...RING_DEFAULTS },
   plexus: { ...PLEXUS_DEFAULTS, enabled: params.has("gui") && PLEXUS_DEFAULTS.enabled },
@@ -193,10 +195,20 @@ gCity.addColor(settings.city, "skyHorizon").onChange(applyCity);
 gCity.add(settings.city, "errorTarget", 2, 64, 1).onChange(applyCity);
 if (!city) gCity.close();
 function applyCity() {
-  city?.configure(settings.city);
+  city?.configure({ ...settings.city, hero: settings.hero });
   relight.setAmount(settings.city.dayNight);
   relight.setGain(settings.city.dayGain ?? 1);
 }
+
+const gHero = gui.addFolder("hero (Myrtle Av)");
+const applyHero = () => city?.configure({ hero: settings.hero });
+gHero.add(settings.hero, "enabled").onChange(applyHero);
+gHero.add(settings.hero, "discard").onChange(applyHero);
+gHero.add(settings.hero, "groundY", -20, 0, 0.1).onChange(applyHero);
+gHero.add(settings.hero, "stationHeight", 8, 20, 0.1).onChange(applyHero);
+gHero.add(settings.hero, "stationLift", -5, 5, 0.1).onChange(applyHero);
+gHero.add(settings.hero, "stationOffset", -20, 20, 0.5).onChange(applyHero);
+applyHero();
 
 const gWin = gui.addFolder("windows");
 gWin.add(settings.windows, "enabled");
@@ -597,7 +609,8 @@ renderer.setAnimationLoop(() => {
     }
     if (dirty) mesh.updateVersion();
   }
-  renderer.render(scene, camera);
+  // ?gui only: window.__subway.debugCamera renders the frame from elsewhere (exterior checks).
+  renderer.render(scene, window.__subway?.debugCamera ?? camera);
   if (settings.look.hud) {
     const r = renderer.domElement.getBoundingClientRect();
     look.update({
