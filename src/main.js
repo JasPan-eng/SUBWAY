@@ -41,7 +41,7 @@ const params = new URLSearchParams(location.search);
 // ---------------------------------------------------------------- renderer
 const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: "high-performance" });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6));
-renderer.setClearColor(new THREE.Color(LOOK_DEFAULTS.background), 1);
+renderer.setClearColor(new THREE.Color("#0b0d12"), 1);
 app.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -115,7 +115,7 @@ let blobLayer = null;
 const blobParam = params.get("blobs"); // ?blobs=webcam or ?blobs=ws://host:9980
 const settings = {
   source: params.get("splat") ? "url" : "subway",
-  ride: { ...RIDE_DEFAULTS, autoRide: params.has("free") },
+  ride: { ...RIDE_DEFAULTS, autoRide: params.has("free"), lookYaw: 40, lookPitch: 14, lookEase: 2.5, rock: 0.003 },
   flow: { ...FLOW_DEFAULTS, limit: 0.03, brushRadius: 140, force: 2.5 },
   sway: { enabled: true, amplitude: sway.uniforms.swayAmplitude.value, frequency: sway.uniforms.swayFrequency.value, tilt: 0.2 },
   standin: { ...SUBWAY_DEFAULTS },
@@ -124,10 +124,10 @@ const settings = {
     source: blobParam === "webcam" ? "webcam" : blobParam?.startsWith("ws") ? "websocket" : "none",
     wsUrl: blobParam?.startsWith("ws") ? blobParam : BLOB_DEFAULTS.wsUrl,
   },
-  look: { ...LOOK_DEFAULTS, title: "SUBWAY — J LINE", background: "#07090c", floor: false },
+  look: { ...LOOK_DEFAULTS, title: "SUBWAY — J LINE", background: "#0b0d12", floor: false, hud: params.has("gui") },
   city: { ...CITY_DEFAULTS, auto: params.has("free") },
   rings: { ...RING_DEFAULTS },
-  plexus: { ...PLEXUS_DEFAULTS },
+  plexus: { ...PLEXUS_DEFAULTS, enabled: params.has("gui") && PLEXUS_DEFAULTS.enabled },
   resetSim: () => flow.reset(),
 };
 
@@ -135,10 +135,14 @@ const settings = {
 const gui = new GUI({ title: "SUBWAY" });
 let guiShown = params.has("gui");
 gui.show(guiShown);
+status.style.display = guiShown ? "block" : "none";
 window.addEventListener("keydown", (e) => {
   if (e.key === "h" || e.key === "H") {
     guiShown = !guiShown;
     gui.show(guiShown);
+    status.style.display = guiShown ? "block" : "none";
+    settings.look.hud = guiShown;
+    look.configure(settings.look);
   }
 });
 gui.add(settings, "source", ["subway", "standin"]).onChange(loadSource);
@@ -381,7 +385,10 @@ async function loadSplat(source) {
     raycastable: false,
     lod: false, // keep gsplat.index == original index (the sim texel lookup relies on it)
     onProgress: (e) => {
-      if (e.lengthComputable) setStatus(`loading ${label}  ${Math.round((100 * e.loaded) / e.total)}%`);
+      if (e.lengthComputable) {
+        setStatus(`loading ${label}  ${Math.round((100 * e.loaded) / e.total)}%`);
+        story.setLoading((0.75 * e.loaded) / e.total, "Loading the car");
+      }
     },
   });
 
@@ -445,7 +452,9 @@ async function loadSplat(source) {
   sway.fitTo(box);
   applyFlow();
 
+  story.setLoading(0.8, "Loading the daylight");
   const day = source.url ? await loadDayColours(count) : "";
+  story.setReady();
   setStatus(`${label}${day}\n${count.toLocaleString()} splats · ${flow.rows} sim rows · scroll to ride · move the pointer to look and push · drop a file to replace`);
 }
 
@@ -588,7 +597,7 @@ renderer.setAnimationLoop(() => {
         splats: splatCount.toLocaleString(),
         ride: `${(ride.progress * 100).toFixed(0)}%`,
         ...(city ? city.info() : { city: "off" }),
-        ...(story.enabled ? { chapter: `${story.state.chapter + 1}/${story.chapters.length}`, light: story.state.dayNight.toFixed(2) } : {}),
+        ...(story.enabled ? { chapter: `${story.state.stop + 1}/${story.stops.length}`, light: story.state.dayNight.toFixed(2) } : {}),
         sim: flow.awake ? "live" : "idle",
         blobs: blobLayer?.source === "none" ? "off" : `${blobLayer?.blobs.length ?? 0} ${blobLayer?.source ?? ""}`,
       },
