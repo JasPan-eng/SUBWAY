@@ -119,12 +119,52 @@ eview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
   dirt opacity 0.02-0.05, reflection strength 0.08-0.15 night / 0.02-0.05 day; disable transparent depth writes and
   verify Spark/mesh compositing explicitly. Acceptance: reflections shift with view and stay inside openings,
   poles/benches occlude glass correctly, no sorting flashes at all five stops; exterior remains readable.
-- [ ] **T14 Give night lighting visible sources** (new `src/practicals.js`, `src/main.js`, `src/city.js`, source
-  renders/retrained `public/splats/*` with Fable). T8 rank 5: align emissive meshes with ceiling fixtures and add
-  sparse route-anchored lamps/signals. Try interior 3800-4500 K, exterior 2200-3000 K, linear emissive intensity
-  2-4; reduce exterior emitters toward day. Bake matching interior spill into training renders; Three.js lights
-  alone cannot relight baked splat RGB. Acceptance: sources agree with rail/seat highlights, night floor and seats
-  remain readable, exterior lights have depth, no broad bloom wash and no luminous blobs in daylight.
+- [ ] **T14 Give night lighting visible sources** (new `src/practicals.js`; wiring in `src/city.js` (exterior) and
+  `src/main.js` (interior fit + GUI)). T8 rank 5. Web side only: emissive meshes where the light already is in the
+  baked splat, plus sparse exterior lamps. (Baking matching spill into the training renders is a separate Fable job.)
+  Everything below was measured by Fable; no exploration needed.
+  - **Interior fixtures (car frame).** The trained car frame is metres, x along the car, y up, z across (same frame as
+    `data/windows.json`). The two fluorescent rows are continuous bright strips in the splat at **z = +0.75 and
+    z = −0.75, y = 3.75, x from −6.2 to +6.3** (ceiling is at y ≈ 3.85; the second pair of bright lines at z = ±1.1,
+    y = 3.53 is the chrome cove above the ad panels, not a light). Build each row as tubes 1.2 m long, 0.10 m wide,
+    0.1 m gap, as one `InstancedMesh` of a thin box (0.03 m tall) or plane facing down, centred on the row, with a
+    `MeshBasicMaterial` (`toneMapped: false`, `fog: false`, `depthWrite: false`, `transparent: false`), colour
+    4000 K ≈ (1.0, 0.93, 0.80) × `interiorIntensity` (default 1.6, clamp display to ≤ 1 per channel after the
+    multiply so it reads as a hot white, not clipped colour). Follow `src/windows.js` exactly for the frame: a
+    `THREE.Group` added to the scene, `fit(centre, scale)` sets `position = -centre * scale`, `scale = scale`, called
+    from `loadSplat` in main.js right after `windowGlass.fit(centre, scale)`; `clear()` from where
+    `windowGlass.clear()` is called. `renderOrder = 1001` (after the glass). Keep interior tubes on in daylight at 70 %
+    (car lights stay on); do not add halos inside the car.
+  - **Exterior sources (route frame).** Create `createPracticals({ root, route })` in `createCity` right after
+    `createHero`; `practicals.configure(p)` from `applyLook` (reads `p.dayNight`), `practicals.update(dt, distance)`
+    from `update` next to `structure.update(dt, journey * route.total)`, `practicals.dispose()` from `dispose`. Copy
+    `src/structure.js` for the frame (a `THREE.Group` with `rotation.y = Math.PI` under `root`, positions
+    `(x, y, -y_route)` from `route.sample(s)`, yaw `atan2(dy, dx)`) and for the ±250 m instancing window keyed on
+    route distance. Rail height is y = 0 in `root`; the street is at y ≈ −10.5 (Myrtle, measured), use that constant.
+    Three kinds, each an `InstancedMesh` with `instanceColor`:
+    1. **Street lamps** under the el: every 35 m along the route, alternating sides, lateral offset ±11 m from the
+       track centreline (sidewalk line), y = −2.5 (8 m above the street), sodium 2200 K ≈ (1.0, 0.62, 0.25).
+    2. **Platform lights** at the three stations (`route.stations[name].s`: Flushing Av 138.8, Myrtle Av-Broadway
+       810.9, Kosciuszko St 1526.1): every 6 m for ±75 m around each s, both sides at lateral ±7 m, y = +3.2, cool
+       4500 K ≈ (1.0, 0.95, 0.88).
+    3. **Signals**: every 180 m, right-hand side only, lateral +6 m, y = +1.5, green (0.25, 1.0, 0.35); every third
+       one red (1.0, 0.2, 0.15).
+    Each source = a small emitter (icosahedron radius 0.12 m, `MeshBasicMaterial`, `toneMapped: false`) and a halo:
+    a 1.4 m camera-facing quad per instance drawn with a `ShaderMaterial` (billboard in the vertex shader from the
+    instance position + camera right/up from `modelViewMatrix`), radial falloff `pow(1 - r, 3)`, additive blending,
+    `depthWrite: false`, `transparent: true`, alpha ≤ 0.35 × `halo` (default 1.0). Halos must stay small: no screen
+    bloom, no fog-sized glow. Multiply exterior intensity by `(1 - dayNight)` (off in daylight); emitters themselves
+    stay but drop to 25 % in daylight. Keep allocation out of `update`.
+  - **GUI** (`src/main.js`): folder `practicals (lights)` with `enabled`, `interiorIntensity` (0..4),
+    `exteriorIntensity` (0..4, default 2.0), `halo` (0..3), `lampSpacing` (20..60, default 35);
+    `settings.practicals = { ...PRACTICALS_DEFAULTS }` exported from practicals.js, passed to the interior object's
+    `configure` and through `city.configure({ practicals: settings.practicals })` to the exterior one. Changing a
+    value re-lays the instances immediately.
+  - Acceptance: at night (`?gui`, Flushing or Broadway stops) the ceiling rows read as the source of the existing
+    silver ceiling highlights, out of the windows there are sparse amber lamps below and ahead with visible depth
+    (nearer = larger halo), platform lights at the stops, an occasional signal; no uniform glow wash; by daylight
+    (Kosciuszko) nothing luminous remains outside and the interior tubes are faint. No console errors. Fable verifies
+    in the browser.
 - [x] **T15 Myrtle Av hero zone** (new `src/hero.js`; wiring in `src/city.js`; a GUI folder in `src/main.js`).
   Everything below was measured by Fable; no exploration needed.
   - Data: `data/myrtle_corner.json` = `{ origin, buildings[], pois[] }`. `buildings[i]` = `{ id, x, y, dist, height,
@@ -190,7 +230,7 @@ Done:
 
 ## Who is on what
 
-- Codex: free. Next candidates: T14 night practicals, T2 passengers scaffold. Fable: T11 after the v2 render.
+- Codex: T14 (practicals, running). Files: `src/practicals.js`, `src/city.js`, `src/main.js`.
 - Fable: pipeline (renders, training, Krea 3D/2D generation), review of Codex commits in the browser, screenshots for T8, T6 after the Redshift day pass. Bounce fix done (7552696).
 - Owner: references (Are.na), passenger image direction, audio assets.
 
