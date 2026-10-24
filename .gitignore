@@ -21,3 +21,6 @@ public/splats/*.ksplat
 # local secrets (Vite env)
 .env.local
 .env*.local
+
+# reference library and scratch venv (Codex research tickets); never committed
+refs/
