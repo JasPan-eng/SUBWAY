@@ -29,6 +29,7 @@ import { HERO_DEFAULTS } from "./hero.js";
 import { createStory } from "./story.js";
 import { createWindows } from "./windows.js";
 import { createInteriorPracticals, PRACTICALS_DEFAULTS } from "./practicals.js";
+import { createPassengers, PASSENGER_DEFAULTS } from "./passengers.js";
 import routeJ from "../data/route_j.json";
 
 /** Trained car, first one found wins (not in git; drop it into public/splats/). */
@@ -131,6 +132,7 @@ const settings = {
   city: { ...CITY_DEFAULTS, auto: params.has("free") },
   hero: { ...HERO_DEFAULTS },
   practicals: { ...PRACTICALS_DEFAULTS },
+  passengers: { ...PASSENGER_DEFAULTS },
   windows: { enabled: true, reflectionNight: 0.2, reflectionDay: 0.05, dirt: 0.03 },
   rings: { ...RING_DEFAULTS },
   plexus: { ...PLEXUS_DEFAULTS, enabled: params.has("gui") && PLEXUS_DEFAULTS.enabled },
@@ -140,6 +142,10 @@ const windowGlass = createWindows(settings.windows);
 scene.add(windowGlass.object);
 const interiorPracticals = createInteriorPracticals(settings.practicals);
 scene.add(interiorPracticals.object);
+const passengers = createPassengers(settings.passengers, {
+  stops: story.stops, base: BASE, debug: params.has("passengers") && params.get("passengers") === "debug",
+});
+scene.add(passengers.object);
 if (params.has("gui")) window.__subway = { THREE, scene, settings, windowGlass, camera, getCity: () => city };
 
 // ---------------------------------------------------------------- GUI
@@ -234,6 +240,13 @@ gPracticals.add(settings.practicals, "exteriorIntensity", 0, 4, 0.01).onChange(a
 gPracticals.add(settings.practicals, "halo", 0, 3, 0.01).onChange(applyPracticals);
 gPracticals.add(settings.practicals, "lampSpacing", 20, 60, 1).onChange(applyPracticals);
 gPracticals.close();
+
+const gPassengers = gui.addFolder("passengers");
+gPassengers.add(settings.passengers, "enabled");
+gPassengers.add(settings.passengers, "shadow", 0, 0.5, 0.01);
+gPassengers.add(settings.passengers, "yawLimit", 0, 0.8, 0.01);
+gPassengers.addColor(settings.passengers, "tintNight");
+gPassengers.close();
 
 const gFlow = gui.addFolder("flow (spring sim)");
 gFlow.add(settings.flow, "enabled").onChange(applyFlow);
@@ -415,6 +428,7 @@ async function loadSource(source) {
 async function loadSplat(source) {
   windowGlass.clear();
   interiorPracticals.clear();
+  passengers.clear();
   if (mesh) {
     scene.remove(mesh);
     mesh.dispose();
@@ -458,6 +472,7 @@ async function loadSplat(source) {
   mesh.updateMatrixWorld(true);
   windowGlass.fit(centre, scale);
   interiorPracticals.fit(centre, scale);
+  passengers.fit(centre, scale);
 
   simToObject.makeTranslation(centre.x, centre.y, centre.z).multiply(new THREE.Matrix4().makeScale(1 / scale, 1 / scale, 1 / scale));
   simToWorld.multiplyMatrices(mesh.matrixWorld, simToObject);
@@ -615,6 +630,7 @@ renderer.setAnimationLoop(() => {
   ride.update(dt, t);
   windowGlass.update(story.enabled ? story.state.dayNight : settings.city.dayNight);
   interiorPracticals.update(story.enabled ? story.state.dayNight : settings.city.dayNight);
+  passengers.update(story.state, camera, story.enabled ? story.state.dayNight : settings.city.dayNight);
   flow.setStrokeOrigin(ride.strokeOrigin);
   city?.update(dt, camera, floorSimY);
   if (mesh) {

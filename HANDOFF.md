@@ -60,7 +60,7 @@ Do not take a ticket that touches files another agent is editing (see **Who is o
   material at opacity 0 and ramp to 1 over ~400 ms (transform/opacity only, per-material `onBeforeCompile` already
   exists for fog: add a `uFade` uniform there). Acceptance: no visible pop when scrolling through Broadway; no console
   errors; frame rate unchanged.
-- [ ] **T2 Passengers** (new `src/passengers.js`; data `data/passengers.json` (exists, 6 seat slots, no images yet);
+- [x] **T2 Passengers** (new `src/passengers.js`; data `data/passengers.json` (exists, 6 seat slots, no images yet);
   wiring in `src/main.js`; images later in `public/passengers/`). T8 rank 9. Seated figures as image planes in the
   car frame with contact shadows, presence per stop, and a debug silhouette mode so placement can be checked before
   any photo exists. Everything below was measured by Fable from the splat; no exploration needed.
@@ -254,6 +254,10 @@ eview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
     day/night, no console errors, frame rate within 10 % of before. Fable verifies in the browser.
 
 Done:
+- [x] T2: passengers — Codex. Seated planes on the measured bench geometry, presence per stop, limited yaw, contact
+  shadows, `?passengers=debug` silhouettes (verified at Myrtle: six, Kosciuszko: one). Needs the owner's cut-outs in
+  `public/passengers/` (PNG alpha, seated, feet at the bottom edge) named in `data/passengers.json`; Fable can draft
+  candidates with Krea from references. Not verified: stanchions occluding figures (depends on splat depth).
 - [x] T14: practicals — Codex + Fable. Interior tubes on the measured fixture rows, route-anchored lamps/platform
   lights/signals with billboard halos, off in daylight. Fable thinned platform lights to every 12 m (6 m read as an
   airstrip). Still to do on the render side: bake matching interior spill into the training renders (Redshift) so
@@ -273,7 +277,7 @@ Done:
 
 ## Who is on what
 
-- Codex: T2 (passengers, running). Files: `src/passengers.js`, `src/main.js`, `data/passengers.json`.
+- Codex: free. Next candidates: T3 sound, T4 door moment, T5 mobile. Fable: T11 after the v2 render; passenger images with the owner.
 - Fable: pipeline (renders, training, Krea 3D/2D generation), review of Codex commits in the browser, screenshots for T8, T6 after the Redshift day pass. Bounce fix done (7552696).
 - Owner: references (Are.na), passenger image direction, audio assets.
 
