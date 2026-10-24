@@ -14,7 +14,7 @@ export const RIDE_DEFAULTS = {
   speed: 0.012, // progress per second when autoRide is on
   bounce: true, // ping-pong at the ends instead of stopping
   eyeHeight: 0.42, // 0 = bottom of the splat box, 1 = top (0.42 ≈ seated eye level in the car)
-  lookYaw: 70, // degrees of yaw at the screen edge
+  lookYaw: 150, // degrees of yaw at the screen edge (150 lets you look almost straight back)
   lookPitch: 28,
   lookEase: 4, // 1/s
   scrollGain: 0.00035, // progress per wheel pixel
@@ -75,6 +75,11 @@ export function createRide(camera, surface, { scroll = true } = {}) {
     setBounds(simBox, matrix) {
       box = simBox.clone();
       simToWorld = matrix;
+    },
+    /** Set the dolly position directly (0..1), e.g. from the scroll story. */
+    setProgress(v) {
+      progress = THREE.MathUtils.clamp(v, 0, 1);
+      p.progress = progress;
     },
     /** Pointer in NDC, or null when it left the window. */
     setPointer(ndc) {

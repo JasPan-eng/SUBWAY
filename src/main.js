@@ -24,6 +24,7 @@ import { createLook, LOOK_DEFAULTS } from "./look.js";
 import { createRide, RIDE_DEFAULTS } from "./ride.js";
 import { loadStandInPoints, buildStandIn, SUBWAY_DEFAULTS, CAR } from "./subway.js";
 import { createCity, CITY_DEFAULTS } from "./city.js";
+import { createStory } from "./story.js";
 import routeJ from "../data/route_j.json";
 
 /** Trained car, first one found wins (not in git; drop it into public/splats/). */
@@ -82,10 +83,15 @@ if (GOOGLE_KEY) {
 } else {
   console.warn("City tiles disabled: no VITE_GOOGLE_MAPS_API_KEY");
 }
+// Scroll story: page scroll drives journey, day/night, dolly and sim strength (src/story.js).
+// ?free disables it and gives the wheel to the journey directly; H toggles the control panel.
+const story = createStory({ enabled: !params.has("free") });
+story.setEnabled(story.enabled);
 const WHEEL_METRES_PER_PX = 0.35;
 renderer.domElement.addEventListener(
   "wheel",
   (e) => {
+    if (story.enabled) return; // let the page scroll
     e.preventDefault();
     city?.advance(e.deltaY * WHEEL_METRES_PER_PX);
   },
@@ -105,7 +111,7 @@ let blobLayer = null;
 const blobParam = params.get("blobs"); // ?blobs=webcam or ?blobs=ws://host:9980
 const settings = {
   source: params.get("splat") ? "url" : "subway",
-  ride: { ...RIDE_DEFAULTS },
+  ride: { ...RIDE_DEFAULTS, autoRide: params.has("free") },
   flow: { ...FLOW_DEFAULTS, limit: 0.03, brushRadius: 140, force: 2.5 },
   sway: { enabled: true, amplitude: sway.uniforms.swayAmplitude.value, frequency: sway.uniforms.swayFrequency.value, tilt: 0.2 },
   standin: { ...SUBWAY_DEFAULTS },
@@ -115,7 +121,7 @@ const settings = {
     wsUrl: blobParam?.startsWith("ws") ? blobParam : BLOB_DEFAULTS.wsUrl,
   },
   look: { ...LOOK_DEFAULTS, title: "SUBWAY — J LINE", background: "#07090c", floor: false },
-  city: { ...CITY_DEFAULTS },
+  city: { ...CITY_DEFAULTS, auto: params.has("free") },
   rings: { ...RING_DEFAULTS },
   plexus: { ...PLEXUS_DEFAULTS },
   resetSim: () => flow.reset(),
@@ -123,7 +129,22 @@ const settings = {
 
 // ---------------------------------------------------------------- GUI
 const gui = new GUI({ title: "SUBWAY" });
+let guiShown = params.has("gui");
+gui.show(guiShown);
+window.addEventListener("keydown", (e) => {
+  if (e.key === "h" || e.key === "H") {
+    guiShown = !guiShown;
+    gui.show(guiShown);
+  }
+});
 gui.add(settings, "source", ["subway", "standin"]).onChange(loadSource);
+gui.add({ story: story.enabled }, "story").onChange((v) => {
+  story.setEnabled(v);
+  settings.city.auto = !v;
+  settings.ride.autoRide = !v;
+  applyCity();
+  applyRide();
+});
 
 const gRide = gui.addFolder("ride (dolly)");
 gRide.add(settings.ride, "progress", 0, 1, 0.001).listen().onChange(applyRide);
@@ -139,6 +160,7 @@ gRide.add(settings.ride, "rock", 0, 0.02, 0.0005).onChange(applyRide);
 
 const gCity = gui.addFolder("city (J line, Google 3D Tiles)");
 gCity.add(settings.city, "enabled").onChange(applyCity);
+gCity.add(settings.city, "dayNight", 0, 1, 0.01).listen().onChange(applyCity);
 gCity.add(settings.city, "journey", 0, 1, 0.001).listen().onChange(applyCity);
 gCity.add(settings.city, "auto").onChange(applyCity);
 gCity.add(settings.city, "speedMps", 0, 30, 0.5).onChange(applyCity);
@@ -477,6 +499,17 @@ const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
   const dt = clock.getDelta();
   const t = clock.elapsedTime;
+  if (story.enabled) {
+    const st = story.update();
+    ride.setProgress(st.ride);
+    city?.setJourney(st.journey);
+    city?.setDayNight(st.dayNight);
+    if (Math.abs(st.force - settings.flow.force) > 0.01) {
+      settings.flow.force = st.force;
+      flow.configure(settings.flow);
+      flowMod.configure(settings.flow);
+    }
+  }
   ride.update(dt, t);
   flow.setStrokeOrigin(ride.strokeOrigin);
   city?.update(dt, camera, floorSimY);
@@ -508,6 +541,7 @@ renderer.setAnimationLoop(() => {
         splats: splatCount.toLocaleString(),
         ride: `${(ride.progress * 100).toFixed(0)}%`,
         ...(city ? city.info() : { city: "off" }),
+        ...(story.enabled ? { chapter: `${story.state.chapter + 1}/${story.chapters.length}`, light: story.state.dayNight.toFixed(2) } : {}),
         sim: flow.awake ? "live" : "idle",
         blobs: blobLayer?.source === "none" ? "off" : `${blobLayer?.blobs.length ?? 0} ${blobLayer?.source ?? ""}`,
       },
@@ -521,4 +555,4 @@ blobLayer.configure(settings.blobs);
 loadSource(settings.source);
 
 applyCity();
-Object.assign(window, { THREE, scene, camera, renderer, spark, sway, flow, flowMod, ride, city, blobLayer, rings, plexus, look, getMesh: () => mesh, settings });
+Object.assign(window, { THREE, scene, camera, renderer, spark, sway, flow, flowMod, ride, city, story, blobLayer, rings, plexus, look, getMesh: () => mesh, settings });

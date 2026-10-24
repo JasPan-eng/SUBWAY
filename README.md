@@ -15,12 +15,20 @@ npm run dev
 - Stand-in: `public/splats/standin_points.f32`, surface points sampled from the Cinema 4D mesh, built into small Gaussians at runtime (`src/subway.js`).
 - `?splat=/splats/other.spz`, or drag a `.spz/.ply/.splat/.ksplat` onto the window.
 
+## Controls
+
+The page is a scroll story (`src/story.js`): five chapters from Flushing Av to Kosciuszko St drive the journey along the
+route, the night-to-day blend, the dolly position and the sim strength. Move the pointer to look (almost all the way
+round), drag to push the splats. `H` toggles the control panel; `?gui` opens it at start; `?free` disables the story
+and gives the wheel to the journey directly.
+
 ## Modules
 
 | file | role |
 | --- | --- |
 | `src/ride.js` | dolly camera along the car (auto ride), pointer look, stroke-plane origin |
-| `src/city.js` | Google Photorealistic 3D Tiles outside the windows, following the J line centreline (`data/route_j.json`); night tint, fog, sky dome |
+| `src/story.js` | scroll timeline: chapters as keyframes, captions, hint |
+| `src/city.js` | Google Photorealistic 3D Tiles outside the windows, following the J line centreline (`data/route_j.json`); night/day presets, fog, sky dome |
 | `src/subway.js` | stand-in splat builder and car dimensions |
 | `src/flow.js` | GPU spring simulation; pointer / blob strokes push splats (ALTM, plus `setStrokeOrigin`) |
 | `src/sway.js` | gentle carriage rock as a splat modifier (ALTM wind sway) |

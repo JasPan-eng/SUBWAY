@@ -25,6 +25,7 @@ export const CITY_DEFAULTS = {
   trackHeight: -2.5, // ellipsoid height (m) of the rails at Myrtle Av; the tile mesh under the station reads ~ -1.5 m there
   floorAboveRail: 1.1, // car floor height above the rails (m)
   lateral: 0, // sideways offset of the car from the track centreline (m)
+  dayNight: 0, // 0 = night preset, 1 = day preset (the look fields below are the result)
   tint: "#5a6f9a",
   brightness: 0.9,
   fog: true,
@@ -33,9 +34,26 @@ export const CITY_DEFAULTS = {
   sky: true,
   skyZenith: "#0a0f1e",
   skyHorizon: "#2c3a63",
-  errorTarget: 20,
-  maxDepth: 30,
+  errorTarget: 6, // screen-space error in px; lower = finer tiles, more downloads
+  maxDepth: 40,
 };
+
+/** Look presets blended by `dayNight`. */
+export const CITY_NIGHT = { tint: "#5a6f9a", brightness: 0.9, fogColor: "#0a1020", fogDensity: 0.006, skyZenith: "#0a0f1e", skyHorizon: "#2c3a63" };
+export const CITY_DAY = { tint: "#ffffff", brightness: 1.05, fogColor: "#c7d3e6", fogDensity: 0.0012, skyZenith: "#4f86d6", skyHorizon: "#d6e4f5" };
+
+/** Blend two look presets (colours in sRGB hex) by t. */
+export function blendLook(t) {
+  const c = (a, b) => "#" + new THREE.Color(a).lerp(new THREE.Color(b), t).getHexString();
+  return {
+    tint: c(CITY_NIGHT.tint, CITY_DAY.tint),
+    brightness: THREE.MathUtils.lerp(CITY_NIGHT.brightness, CITY_DAY.brightness, t),
+    fogColor: c(CITY_NIGHT.fogColor, CITY_DAY.fogColor),
+    fogDensity: THREE.MathUtils.lerp(CITY_NIGHT.fogDensity, CITY_DAY.fogDensity, t),
+    skyZenith: c(CITY_NIGHT.skyZenith, CITY_DAY.skyZenith),
+    skyHorizon: c(CITY_NIGHT.skyHorizon, CITY_DAY.skyHorizon),
+  };
+}
 
 /** Piecewise-linear route sampler over data/route_j.json (x east, y north, metres). */
 export function createRoute(route) {
@@ -194,6 +212,7 @@ export function createCity(o) {
     configure(next) {
       const prev = p;
       p = { ...p, ...next };
+      if (next.dayNight !== undefined && next.dayNight !== prev.dayNight) Object.assign(p, blendLook(p.dayNight));
       if (next.journey !== undefined && next.journey !== prev.journey) journey = next.journey;
       tiles.errorTarget = p.errorTarget;
       tiles.maxDepth = p.maxDepth;
@@ -202,6 +221,17 @@ export function createCity(o) {
         reorient.transformLatLonHeightToOrigin(THREE.MathUtils.degToRad(route.origin.lat), THREE.MathUtils.degToRad(route.origin.lon), p.trackHeight);
       }
       applyLook();
+    },
+    /** Day/night blend 0..1 (also updates the public params so the GUI follows). */
+    setDayNight(t) {
+      p.dayNight = THREE.MathUtils.clamp(t, 0, 1);
+      Object.assign(p, blendLook(p.dayNight));
+      applyLook();
+    },
+    /** Set the journey directly (0..1), e.g. from the scroll story. */
+    setJourney(j) {
+      journey = THREE.MathUtils.clamp(j, 0, 1);
+      p.journey = journey;
     },
     /** Scroll input: metres along the route. */
     advance(metres) {
