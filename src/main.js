@@ -60,8 +60,8 @@ try {
 
 // ---------------------------------------------------------------- modifiers + rigs
 const sway = createSwayModifier();
-sway.uniforms.swayAmplitude.value = 0.004;
-sway.uniforms.swayFrequency.value = 1.1;
+sway.uniforms.swayAmplitude.value = 0.0012; // real cars sway slowly and a little; the old 0.004 @ 1.1 Hz read as bouncing
+sway.uniforms.swayFrequency.value = 0.45;
 
 const flow = createFlowSim(renderer);
 const flowMod = createFlowModifier(flow);
@@ -115,9 +115,9 @@ let blobLayer = null;
 const blobParam = params.get("blobs"); // ?blobs=webcam or ?blobs=ws://host:9980
 const settings = {
   source: params.get("splat") ? "url" : "subway",
-  ride: { ...RIDE_DEFAULTS, autoRide: params.has("free"), lookYaw: 40, lookPitch: 14, lookEase: 2.5, rock: 0.003 },
+  ride: { ...RIDE_DEFAULTS, autoRide: params.has("free"), lookYaw: 40, lookPitch: 14, lookEase: 2.5, rock: 0.0008, rockRate: 2.4 },
   flow: { ...FLOW_DEFAULTS, limit: 0.03, brushRadius: 140, force: 2.5 },
-  sway: { enabled: true, amplitude: sway.uniforms.swayAmplitude.value, frequency: sway.uniforms.swayFrequency.value, tilt: 0.2 },
+  sway: { enabled: true, amplitude: sway.uniforms.swayAmplitude.value, frequency: sway.uniforms.swayFrequency.value, tilt: 0.05 },
   standin: { ...SUBWAY_DEFAULTS },
   blobs: {
     ...BLOB_DEFAULTS,
