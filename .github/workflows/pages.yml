@@ -26,6 +26,9 @@ jobs:
       - run: npm ci
       # Project site lives at https://<user>.github.io/<repo>/ so assets need that base path.
       - run: npm run build -- --base=/${{ github.event.repository.name }}/
+        env:
+          # Browser key for Google Map Tiles (restricted by HTTP referrer on the Google side).
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

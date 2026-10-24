@@ -28,7 +28,7 @@ export const RIDE_DEFAULTS = {
  * @param {THREE.PerspectiveCamera} camera
  * @param {HTMLElement} surface  element receiving wheel events
  */
-export function createRide(camera, surface) {
+export function createRide(camera, surface, { scroll = true } = {}) {
   let p = { ...RIDE_DEFAULTS };
   let box = new THREE.Box3(new THREE.Vector3(-0.5, -0.1, -0.1), new THREE.Vector3(0.5, 0.1, 0.1));
   let simToWorld = new THREE.Matrix4();
@@ -43,15 +43,16 @@ export function createRide(camera, surface) {
   const strokeOrigin = new THREE.Vector3();
   const euler = new THREE.Euler(0, 0, 0, "YXZ");
 
-  surface.addEventListener(
-    "wheel",
-    (e) => {
-      e.preventDefault();
-      progress = THREE.MathUtils.clamp(progress + e.deltaY * p.scrollGain, 0, 1);
-      p.progress = progress;
-    },
-    { passive: false },
-  );
+  if (scroll)
+    surface.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        progress = THREE.MathUtils.clamp(progress + e.deltaY * p.scrollGain, 0, 1);
+        p.progress = progress;
+      },
+      { passive: false },
+    );
 
   return {
     get params() {

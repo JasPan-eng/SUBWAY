@@ -22,7 +22,9 @@ import { patchSparkMaterial, RING_DEFAULTS } from "./rings.js";
 import { createPlexus, PLEXUS_DEFAULTS } from "./plexus.js";
 import { createLook, LOOK_DEFAULTS } from "./look.js";
 import { createRide, RIDE_DEFAULTS } from "./ride.js";
-import { loadStandInPoints, buildStandIn, SUBWAY_DEFAULTS } from "./subway.js";
+import { loadStandInPoints, buildStandIn, SUBWAY_DEFAULTS, CAR } from "./subway.js";
+import { createCity, CITY_DEFAULTS } from "./city.js";
+import routeJ from "../data/route_j.json";
 
 /** Trained car, first one found wins (not in git; drop it into public/splats/). */
 const BASE = import.meta.env.BASE_URL; // "/" in dev, "/<repo>/" on GitHub Pages
@@ -64,7 +66,33 @@ const morphMod = createMorphModifier();
 const plexus = createPlexus(flow, morphMod);
 scene.add(plexus.object);
 const look = createLook(document.body);
-const ride = createRide(camera, renderer.domElement);
+// The wheel drives the train's journey along the route (src/city.js); the in-car dolly auto-rides.
+const ride = createRide(camera, renderer.domElement, { scroll: false });
+
+// Google Photorealistic 3D Tiles outside the windows. Needs VITE_GOOGLE_MAPS_API_KEY (.env.local / CI secret).
+const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+/** @type {ReturnType<typeof createCity> | null} */
+let city = null;
+if (GOOGLE_KEY) {
+  try {
+    city = createCity({ renderer, scene, apiKey: GOOGLE_KEY, route: routeJ, carLengthMetres: CAR.halfLength * 2, base: BASE });
+  } catch (err) {
+    console.warn("City tiles disabled:", err);
+  }
+} else {
+  console.warn("City tiles disabled: no VITE_GOOGLE_MAPS_API_KEY");
+}
+const WHEEL_METRES_PER_PX = 0.35;
+renderer.domElement.addEventListener(
+  "wheel",
+  (e) => {
+    e.preventDefault();
+    city?.advance(e.deltaY * WHEEL_METRES_PER_PX);
+  },
+  { passive: false },
+);
+/** sim-space y of the car floor (from the robust box), fed to the city so the rails sit under it */
+let floorSimY = -0.1;
 
 let simBox = null;
 let restSim = null;
@@ -87,6 +115,7 @@ const settings = {
     wsUrl: blobParam?.startsWith("ws") ? blobParam : BLOB_DEFAULTS.wsUrl,
   },
   look: { ...LOOK_DEFAULTS, title: "SUBWAY — J LINE", background: "#07090c", floor: false },
+  city: { ...CITY_DEFAULTS },
   rings: { ...RING_DEFAULTS },
   plexus: { ...PLEXUS_DEFAULTS },
   resetSim: () => flow.reset(),
@@ -107,6 +136,29 @@ gRide.add(settings.ride, "lookYaw", 0, 120, 1).onChange(applyRide);
 gRide.add(settings.ride, "lookPitch", 0, 60, 1).onChange(applyRide);
 gRide.add(settings.ride, "strokeDepth", 0.02, 0.4, 0.005).onChange(applyRide);
 gRide.add(settings.ride, "rock", 0, 0.02, 0.0005).onChange(applyRide);
+
+const gCity = gui.addFolder("city (J line, Google 3D Tiles)");
+gCity.add(settings.city, "enabled").onChange(applyCity);
+gCity.add(settings.city, "journey", 0, 1, 0.001).listen().onChange(applyCity);
+gCity.add(settings.city, "auto").onChange(applyCity);
+gCity.add(settings.city, "speedMps", 0, 30, 0.5).onChange(applyCity);
+gCity.add(settings.city, "bounce").onChange(applyCity);
+gCity.add(settings.city, "trackHeight", -40, 20, 0.5).onChange(applyCity);
+gCity.add(settings.city, "floorAboveRail", 0, 3, 0.05).onChange(applyCity);
+gCity.add(settings.city, "lateral", -6, 6, 0.1).onChange(applyCity);
+gCity.addColor(settings.city, "tint").onChange(applyCity);
+gCity.add(settings.city, "brightness", 0, 2, 0.01).onChange(applyCity);
+gCity.add(settings.city, "fog").onChange(applyCity);
+gCity.addColor(settings.city, "fogColor").onChange(applyCity);
+gCity.add(settings.city, "fogDensity", 0, 0.05, 0.0005).onChange(applyCity);
+gCity.add(settings.city, "sky").onChange(applyCity);
+gCity.addColor(settings.city, "skyZenith").onChange(applyCity);
+gCity.addColor(settings.city, "skyHorizon").onChange(applyCity);
+gCity.add(settings.city, "errorTarget", 2, 64, 1).onChange(applyCity);
+if (!city) gCity.close();
+function applyCity() {
+  city?.configure(settings.city);
+}
 
 const gFlow = gui.addFolder("flow (spring sim)");
 gFlow.add(settings.flow, "enabled").onChange(applyFlow);
@@ -349,7 +401,9 @@ async function loadSplat(source) {
   simBox = box.clone().applyMatrix4(objToSim);
   // The dolly uses a robust box (2nd..98th percentile per axis) so stray gaussians
   // outside the car cannot push the eye line or the path off.
-  ride.setBounds(robustBox(rest, count), simToWorld);
+  const rbox = robustBox(rest, count);
+  ride.setBounds(rbox, simToWorld);
+  floorSimY = rbox.min.y;
   plexus.setTransform(simToWorld);
   plexus.setMorphEnabled(false);
   applyPlexus();
@@ -425,6 +479,7 @@ renderer.setAnimationLoop(() => {
   const t = clock.elapsedTime;
   ride.update(dt, t);
   flow.setStrokeOrigin(ride.strokeOrigin);
+  city?.update(dt, camera, floorSimY);
   if (mesh) {
     let dirty = false;
     if (blobLayer) for (const s of blobLayer.consumeSegments()) flow.stroke(s.ax, s.ay, s.bx, s.by);
@@ -452,6 +507,7 @@ renderer.setAnimationLoop(() => {
         source: splatLabel.slice(0, 28),
         splats: splatCount.toLocaleString(),
         ride: `${(ride.progress * 100).toFixed(0)}%`,
+        ...(city ? city.info() : { city: "off" }),
         sim: flow.awake ? "live" : "idle",
         blobs: blobLayer?.source === "none" ? "off" : `${blobLayer?.blobs.length ?? 0} ${blobLayer?.source ?? ""}`,
       },
@@ -464,4 +520,5 @@ blobLayer.configure(settings.blobs);
 
 loadSource(settings.source);
 
-Object.assign(window, { scene, camera, renderer, spark, sway, flow, flowMod, ride, blobLayer, rings, plexus, look, getMesh: () => mesh, settings });
+applyCity();
+Object.assign(window, { THREE, scene, camera, renderer, spark, sway, flow, flowMod, ride, city, blobLayer, rings, plexus, look, getMesh: () => mesh, settings });

@@ -11,7 +11,7 @@ npm run dev
 
 ## Splat sources
 
-- `public/splats/subway.spz` — the trained car (not in git; drop it in locally). Loaded by default when present.
+- `public/splats/subway.spz` — the trained car (12 MB, committed). Loaded by default when present; `subway.ply` works too.
 - Stand-in: `public/splats/standin_points.f32`, surface points sampled from the Cinema 4D mesh, built into small Gaussians at runtime (`src/subway.js`).
 - `?splat=/splats/other.spz`, or drag a `.spz/.ply/.splat/.ksplat` onto the window.
 
@@ -19,7 +19,8 @@ npm run dev
 
 | file | role |
 | --- | --- |
-| `src/ride.js` | dolly camera along the car (scroll / auto ride), pointer look, stroke-plane origin |
+| `src/ride.js` | dolly camera along the car (auto ride), pointer look, stroke-plane origin |
+| `src/city.js` | Google Photorealistic 3D Tiles outside the windows, following the J line centreline (`data/route_j.json`); night tint, fog, sky dome |
 | `src/subway.js` | stand-in splat builder and car dimensions |
 | `src/flow.js` | GPU spring simulation; pointer / blob strokes push splats (ALTM, plus `setStrokeOrigin`) |
 | `src/sway.js` | gentle carriage rock as a splat modifier (ALTM wind sway) |
@@ -31,6 +32,23 @@ npm run dev
 
 Sim space is the splat normalised to its widest axis = 1 and centred, so the car is
 1 unit long. Modifier order: morph → flow → sway. `lod: false` keeps splat indices stable.
+
+## City outside the windows
+
+`src/city.js` streams Google Photorealistic 3D Tiles with [3d-tiles-renderer](https://github.com/NASA-AMMOS/3DTilesRendererJS).
+The car stays at the origin; the city is mounted under one root scaled to sim units, rotated to the track heading and
+slid along the J line centreline (`data/route_j.json`, built from OpenStreetMap's BMT Jamaica Line ways between
+Flushing Av and Kosciuszko St, Myrtle Av-Broadway in the middle). The mouse wheel scrubs the journey; `auto` rides it.
+
+It needs a Google Maps Platform key with the **Map Tiles API** enabled, restricted by HTTP referrer:
+
+```
+# .env.local (not committed)
+VITE_GOOGLE_MAPS_API_KEY=...
+```
+
+The GitHub Pages workflow reads the same name from the repository secrets. Without a key the viewer still runs; the
+windows just stay dark.
 
 ## Pipeline (outside this repo)
 
