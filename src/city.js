@@ -118,22 +118,26 @@ export function createCity(o) {
   // Night look: unlit tinted materials, optional fog.
   const tint = new THREE.Color(p.tint);
   const materials = new Set();
+  const fadingMaterials = [];
   // Own exponential fog on the tile materials: a global scene.fog would also reach
   // Spark's splat shader, which does not support it and renders nothing.
   const fogUniforms = { uCityFogColor: { value: new THREE.Color(p.fogColor) }, uCityFogDensity: { value: 0 } };
   function nightMaterial(mat) {
     const m = new THREE.MeshBasicMaterial({ map: mat.map ?? null, color: tint.clone().multiplyScalar(p.brightness), fog: false });
+    const uFade = { value: 0 };
+    fadingMaterials.push({ material: m, uniform: uFade, progress: 0 });
     m.onBeforeCompile = (shader) => {
       Object.assign(shader.uniforms, fogUniforms);
+      shader.uniforms.uFade = uFade;
       const V = "varying float vCityDepth;";
       shader.vertexShader = shader.vertexShader
         .replace("#include <common>", `#include <common>\n${V}`)
         .replace("#include <project_vertex>", "#include <project_vertex>\nvCityDepth = -mvPosition.z;");
       shader.fragmentShader = shader.fragmentShader
-        .replace("#include <common>", `#include <common>\n${V}\nuniform vec3 uCityFogColor;\nuniform float uCityFogDensity;`)
+        .replace("#include <common>", `#include <common>\n${V}\nuniform vec3 uCityFogColor;\nuniform float uCityFogDensity;\nuniform float uFade;`)
         .replace(
           "#include <dithering_fragment>",
-          "#include <dithering_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uCityFogColor, 1.0 - exp(-uCityFogDensity * vCityDepth));",
+          "#include <dithering_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uCityFogColor, 1.0 - exp(-uCityFogDensity * vCityDepth));\ngl_FragColor.rgb = mix(uCityFogColor, gl_FragColor.rgb, uFade);",
         );
     };
     m.userData.city = true;
@@ -153,6 +157,12 @@ export function createCity(o) {
     scene.traverse((obj) => {
       if (obj.isMesh && obj.material?.userData?.city) {
         materials.delete(obj.material);
+        for (let i = fadingMaterials.length - 1; i >= 0; i--) {
+          if (fadingMaterials[i].material === obj.material) {
+            fadingMaterials[i] = fadingMaterials[fadingMaterials.length - 1];
+            fadingMaterials.pop();
+          }
+        }
         obj.material.dispose();
       }
     });
@@ -246,6 +256,16 @@ export function createCity(o) {
      */
     update(dt, camera, floorSimY) {
       if (!p.enabled) return;
+      // 400 ms quadratic ease-out; swap/pop keeps the active list allocation-free.
+      for (let i = fadingMaterials.length - 1; i >= 0; i--) {
+        const fade = fadingMaterials[i];
+        fade.progress = Math.min(1, fade.progress + dt / 0.4);
+        fade.uniform.value = 1 - (1 - fade.progress) * (1 - fade.progress);
+        if (fade.progress === 1) {
+          fadingMaterials[i] = fadingMaterials[fadingMaterials.length - 1];
+          fadingMaterials.pop();
+        }
+      }
       if (p.auto) {
         journey += (direction * p.speedMps * dt) / route.total;
         if (journey > 1 || journey < 0) {

@@ -55,7 +55,7 @@ Redshift renders on this machine (same GPU).
 Each ticket is self-contained. Take one, do it on `main` in this folder, commit with a clear message, mark it here.
 Do not take a ticket that touches files another agent is editing (see **Who is on what**).
 
-- [ ] **T1 City tiles fade-in** (`src/city.js`). Tiles currently pop. On each `load-model` event start the tile's
+- [x] **T1 City tiles fade-in** (`src/city.js`). Tiles currently pop. On each `load-model` event start the tile's
   material at opacity 0 and ramp to 1 over ~400 ms (transform/opacity only, per-material `onBeforeCompile` already
   exists for fog: add a `uFade` uniform there). Acceptance: no visible pop when scrolling through Broadway; no console
   errors; frame rate unchanged.
@@ -76,6 +76,7 @@ Do not take a ticket that touches files another agent is editing (see **Who is o
   the Krea day colours; keep night untouched.
 
 Done:
+- [x] T1: Fade city tiles in over 400 ms toward fog colour
 - [x] Day mode (Krea-relit colour variant + relight modifier) — Fable, 2737d90
 - [x] Ride UI: station sign, one-gesture boarding, route strip, captions, guided camera — Fable, 5fdbfb3
 
