@@ -165,6 +165,7 @@ gRide.add(settings.ride, "rock", 0, 0.02, 0.0005).onChange(applyRide);
 const gCity = gui.addFolder("city (J line, Google 3D Tiles)");
 gCity.add(settings.city, "enabled").onChange(applyCity);
 gCity.add(settings.city, "dayNight", 0, 1, 0.01).listen().onChange(applyCity);
+gCity.add(settings.city, "dayGain", 0.5, 2, 0.01).onChange(applyCity);
 gCity.add(settings.city, "journey", 0, 1, 0.001).listen().onChange(applyCity);
 gCity.add(settings.city, "auto").onChange(applyCity);
 gCity.add(settings.city, "speedMps", 0, 30, 0.5).onChange(applyCity);
@@ -185,6 +186,7 @@ if (!city) gCity.close();
 function applyCity() {
   city?.configure(settings.city);
   relight.setAmount(settings.city.dayNight);
+  relight.setGain(settings.city.dayGain ?? 1);
 }
 
 const gFlow = gui.addFolder("flow (spring sim)");

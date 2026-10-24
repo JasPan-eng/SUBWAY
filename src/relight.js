@@ -26,6 +26,7 @@ export function createRelight() {
   const uniforms = {
     relightColors: { value: empty },
     relightAmount: { value: 0 },
+    relightGain: { value: 1 },
     relightWidth: { value: WIDTH },
   };
   let ready = false;
@@ -39,7 +40,7 @@ export function createRelight() {
       globals: [
         /* glsl */ `
         uniform sampler2D relightColors;
-        uniform float relightAmount;
+        uniform float relightAmount, relightGain;
         uniform int relightWidth;`,
       ],
       statements: [
@@ -47,7 +48,7 @@ export function createRelight() {
         /* glsl */ `if (relightAmount > 0.0) {
           ivec2 rc = ivec2(${inputs.gsplat}.index % relightWidth, ${inputs.gsplat}.index / relightWidth);
           vec4 day = texelFetch(relightColors, rc, 0);
-          if (day.a > 0.5) ${outputs.gsplat}.rgba.rgb = mix(${inputs.gsplat}.rgba.rgb, day.rgb, relightAmount);
+          if (day.a > 0.5) ${outputs.gsplat}.rgba.rgb = mix(${inputs.gsplat}.rgba.rgb, min(day.rgb * relightGain, vec3(1.0)), relightAmount);
         }`,
       ],
     }),
@@ -95,6 +96,10 @@ export function createRelight() {
       colours = null;
       uniforms.relightColors.value = empty;
       ready = false;
+    },
+    /** Brightness multiplier on the day colours (the Krea-averaged variant lands a little dim). */
+    setGain(v) {
+      uniforms.relightGain.value = v;
     },
     setAmount(v) {
       uniforms.relightAmount.value = THREE.MathUtils.clamp(v, 0, 1);

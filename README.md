@@ -67,11 +67,15 @@ windows just stay dark.
 Scene and training assets live in `E:\THESIS REVAMP\SUBWAY\Project Files\` (`C4D\Setup_1\Setup_1_graffiti.c4d`,
 `Splat\` with the camera rig, exact poses in `transforms.json` / COLMAP text, and the rendered training views).
 
-Day variant: the same 502-view rig rendered with `Setup_1_graffiti_day.c4d` (RS sun + sky dome through the windows) into
-`Splat\images_day`, poses exported to `Splat\day\transforms.json`, then a colour-only retrain from the night splat:
+Day variant (shipped): the night training frames relit to overcast daylight with Krea's image editor
+(`google/nano-banana-2.1`, prompt in `Splat\prompts\day.txt`), near-black close-ups skipped, structurally
+re-imagined results rejected by an edge-correlation check (`Splat\krea_daylign_check.py`), then a colour-only
+retrain from the night splat with windows masked from the night renders:
 
 ```
-.venv310/Scripts/python train_splat.py --data day --init_splat train_01/subway_culled2.ply \
-  --freeze_geometry --freeze_opacity --mask_bright 0.97 --out train_day --iters 8000
-node tools/ply2spz.mjs ../Splat/train_day/subway_final.ply public/splats/subway_day.spz
+.venv310/Scripts/python train_splat.py --data krea_day/full_data --init_splat train_01/subway_culled2.ply   --freeze_geometry --freeze_opacity --reset_sh --mask_from_night images --out krea_day/train_full   --iters 15000 --lr_sh0 0.01
+node tools/ply2spz.mjs ../Splat/krea_day/train_full/subway_final.ply public/splats/subway_day.spz 0 0.02
 ```
+
+The same recipe gives any themed variant (crowded, wrecked, flooded…) from a different prompt. A Redshift-rendered
+day pass (`Setup_1_graffiti_day.c4d` -> `Splat\images_day`) is the physically lit alternative for the same training.

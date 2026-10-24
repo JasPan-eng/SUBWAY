@@ -16,6 +16,7 @@ public/splats/*.ksplat
 
 # the deployed car splat is small enough (spz) to live in the repo
 !public/splats/subway.spz
+!public/splats/subway_day.spz
 
 # local secrets (Vite env)
 .env.local
