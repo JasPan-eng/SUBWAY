@@ -74,6 +74,25 @@ Do not take a ticket that touches files another agent is editing (see **Who is o
 - [ ] **T5 Mobile pass** (`index.html`). Test at 375x812: strip, captions, sign. Touch scroll boards and rides.
 - [ ] **T6 Day look** (`src/city.js`, `settings.city.dayGain`). dayGain 1.25 -> ~1.1; day sky/fog values tuned against
   the Krea day colours; keep night untouched.
+- [ ] **T7 Near-field elevated structure** (new `src/structure.js`, assets in `public/props/`). The Google tiles are
+  far-field only; the steel el under and beside the car is what sells the ride. Fable generates a repeating "bent" of
+  the Broadway el with Hunyuan3D (`public/props/el_bent.glb`, PBR, reference image in
+  `E:\THESIS REVAMP\SUBWAY\Project Files\Refs\krea3d\el_girder_ref.png`). Codex: (1) optimise the GLB for the web
+  with `npx @gltf-transform/cli optimize in.glb out.glb --texture-compress webp --texture-size 2048 --simplify-error 0.001`
+  (keep under ~8 MB); (2) load it with GLTFLoader (+DRACOLoader from `public/draco/` if compressed); (3) instance it along
+  `data/route_j.json` with `InstancedMesh`, one bent every real bent spacing (about 15 m; derive the section length from
+  the GLB bounding box and scale the mesh so its width across the tracks is ~10.5 m), oriented to the route tangent,
+  deck top at rail height (the car floor is `floorAboveRail` 1.1 m above rail: see how `city.js` places the tiles root,
+  reuse the same root/transform so the structure moves with the journey); (4) use the same night/day tint + fog
+  treatment as the tiles (`nightMaterial` in city.js, or share its uniforms) so it matches; (5) frustum-cull: only
+  instances within ~250 m of the car are drawn. Acceptance: from inside the car the girders and columns pass under the
+  windows at the right scale at every stop, no pop, frame rate within 10% of before, GLB cached by the browser.
+- [ ] **T8 Realism review** (no code). Fable captures 6 screenshots of the ride (night, el, Myrtle, dawn, day, end) into
+  `E:\THESIS REVAMP\SUBWAY\Project Files\Refseview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
+  side by side (`codex --image`) and writes a ranked list of the 10 things that most break realism, each with a concrete
+  fix (values, files), appended to this queue as tickets. Codex acts as the realism supervisor for the following tickets.
+- [ ] **T9 Reference library** (running, Codex): public YouTube J-line window footage frames + Wikimedia/NYPL/LoC stills
+  into `E:\THESIS REVAMP\SUBWAY\Project Files\Refs\jline\`, with `refs.md` and a contact sheet.
 
 Done:
 - [x] T1: Fade city tiles in over 400 ms toward fog colour
@@ -82,8 +101,8 @@ Done:
 
 ## Who is on what
 
-- Codex: T1, then T2. Files: `src/city.js`, `src/passengers.js`, `data/passengers.json`, `src/main.js` (passenger wiring only).
-- Fable: pipeline (renders, training, Krea), review of Codex commits in the browser, T6 after the Redshift day pass.
+- Codex: T9 (running), then T7 when `public/props/el_bent.glb` exists, then T8 review, then T2. Files: `src/structure.js`, `public/props/`, `src/passengers.js`, `data/passengers.json`, `src/main.js` (wiring only).
+- Fable: pipeline (renders, training, Krea 3D/2D generation), review of Codex commits in the browser, screenshots for T8, T6 after the Redshift day pass. Bounce fix done (7552696).
 - Owner: references (Are.na), passenger image direction, audio assets.
 
 ## Working agreement (Fable + Codex)
