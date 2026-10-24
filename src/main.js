@@ -17,6 +17,7 @@ import GUI from "lil-gui";
 import { createSwayModifier } from "./sway.js";
 import { createFlowSim, createFlowModifier, FLOW_DEFAULTS } from "./flow.js";
 import { createMorphModifier } from "./morph.js";
+import { createRelight } from "./relight.js";
 import { createBlobLayer, BLOB_DEFAULTS } from "./blobs.js";
 import { patchSparkMaterial, RING_DEFAULTS } from "./rings.js";
 import { createPlexus, PLEXUS_DEFAULTS } from "./plexus.js";
@@ -30,6 +31,8 @@ import routeJ from "../data/route_j.json";
 /** Trained car, first one found wins (not in git; drop it into public/splats/). */
 const BASE = import.meta.env.BASE_URL; // "/" in dev, "/<repo>/" on GitHub Pages
 const TRAINED_SPLATS = [`${BASE}splats/subway.spz`, `${BASE}splats/subway.ply`];
+/** Day-lit colour variant of the same gaussians (same order), loaded once and crossfaded by src/relight.js. */
+const DAY_SPLAT = `${BASE}splats/subway_day.spz`;
 
 const app = document.getElementById("app");
 const status = document.getElementById("status");
@@ -63,6 +66,7 @@ sway.uniforms.swayFrequency.value = 1.1;
 const flow = createFlowSim(renderer);
 const flowMod = createFlowModifier(flow);
 const morphMod = createMorphModifier();
+const relight = createRelight();
 
 const plexus = createPlexus(flow, morphMod);
 scene.add(plexus.object);
@@ -180,6 +184,7 @@ gCity.add(settings.city, "errorTarget", 2, 64, 1).onChange(applyCity);
 if (!city) gCity.close();
 function applyCity() {
   city?.configure(settings.city);
+  relight.setAmount(settings.city.dayNight);
 }
 
 const gFlow = gui.addFolder("flow (spring sim)");
@@ -321,6 +326,7 @@ function robustBox(rest, count, lo = 0.02, hi = 0.98) {
 function applyModifiers() {
   if (!mesh) return;
   const list = [];
+  if (relight.ready) list.push(relight.modifier);
   if (settings.flow.enabled) list.push(flowMod.modifier);
   if (settings.sway.enabled) list.push(sway.modifier);
   mesh.objectModifiers = list.length ? list : undefined;
@@ -437,7 +443,45 @@ async function loadSplat(source) {
   sway.fitTo(box);
   applyFlow();
 
-  setStatus(`${label}\n${count.toLocaleString()} splats · ${flow.rows} sim rows · scroll to ride · move the pointer to look and push · drop a file to replace`);
+  const day = source.url ? await loadDayColours(count) : "";
+  setStatus(`${label}${day}\n${count.toLocaleString()} splats · ${flow.rows} sim rows · scroll to ride · move the pointer to look and push · drop a file to replace`);
+}
+
+/**
+ * Day variant: the same gaussians retrained under daylight (geometry + opacity frozen).
+ * Loaded hidden, its colours go into the relight texture, then it is disposed.
+ * `?fakeday` synthesises a warm, brighter copy of the night colours so the crossfade
+ * can be checked before the day training exists.
+ */
+async function loadDayColours(count) {
+  relight.clear();
+  if (!mesh) return "";
+  try {
+    if (params.has("fakeday")) {
+      const tmp = new THREE.Color();
+      relight.setFromMesh(mesh, count, (_i, c) => {
+        tmp.copy(c).multiplyScalar(1.8).offsetHSL(-0.04, -0.1, 0.1);
+        c.set(Math.min(1, tmp.r), Math.min(1, tmp.g), Math.min(1, tmp.b));
+      });
+      applyModifiers();
+      return " \u00b7 day: synthetic (?fakeday)";
+    }
+    const head = await fetch(DAY_SPLAT, { method: "HEAD" });
+    if (!head.ok || (head.headers.get("content-type") || "").includes("text/html")) return "";
+    setStatus(`loading day colours\u2026`);
+    const dayMesh = new SplatMesh({ url: DAY_SPLAT, lod: false, raycastable: false });
+    await dayMesh.initialized;
+    try {
+      relight.setFromMesh(dayMesh, count);
+    } finally {
+      dayMesh.dispose();
+    }
+    applyModifiers();
+    return " \u00b7 day variant loaded";
+  } catch (err) {
+    console.warn("day colours unavailable:", err);
+    return "";
+  }
 }
 
 // ---------------------------------------------------------------- pointer -> look + strokes
@@ -504,6 +548,7 @@ renderer.setAnimationLoop(() => {
     ride.setProgress(st.ride);
     city?.setJourney(st.journey);
     city?.setDayNight(st.dayNight);
+    relight.setAmount(st.dayNight);
     if (Math.abs(st.force - settings.flow.force) > 0.01) {
       settings.flow.force = st.force;
       flow.configure(settings.flow);
@@ -555,4 +600,4 @@ blobLayer.configure(settings.blobs);
 loadSource(settings.source);
 
 applyCity();
-Object.assign(window, { THREE, scene, camera, renderer, spark, sway, flow, flowMod, ride, city, story, blobLayer, rings, plexus, look, getMesh: () => mesh, settings });
+Object.assign(window, { THREE, scene, camera, relight, renderer, spark, sway, flow, flowMod, ride, city, story, blobLayer, rings, plexus, look, getMesh: () => mesh, settings });

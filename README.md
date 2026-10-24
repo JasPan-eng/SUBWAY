@@ -12,6 +12,9 @@ npm run dev
 ## Splat sources
 
 - `public/splats/subway.spz` — the trained car (12 MB, committed). Loaded by default when present; `subway.ply` works too.
+- `public/splats/subway_day.spz` — the same gaussians retrained under daylight (geometry and opacity frozen, so the
+  splat order matches). Loaded hidden once; its colours feed the per-splat night→day crossfade (`src/relight.js`).
+  `?fakeday` fakes it from the night colours for testing.
 - Stand-in: `public/splats/standin_points.f32`, surface points sampled from the Cinema 4D mesh, built into small Gaussians at runtime (`src/subway.js`).
 - `?splat=/splats/other.spz`, or drag a `.spz/.ply/.splat/.ksplat` onto the window.
 
@@ -28,6 +31,7 @@ and gives the wheel to the journey directly.
 | --- | --- |
 | `src/ride.js` | dolly camera along the car (auto ride), pointer look, stroke-plane origin |
 | `src/story.js` | scroll timeline: chapters as keyframes, captions, hint |
+| `src/relight.js` | per-splat colour crossfade night → day (Spark modifier reading a day-colour texture), driven by the story's `dayNight` |
 | `src/city.js` | Google Photorealistic 3D Tiles outside the windows, following the J line centreline (`data/route_j.json`); night/day presets, fog, sky dome |
 | `src/subway.js` | stand-in splat builder and car dimensions |
 | `src/flow.js` | GPU spring simulation; pointer / blob strokes push splats (ALTM, plus `setStrokeOrigin`) |
@@ -39,7 +43,7 @@ and gives the wheel to the journey directly.
 | `src/look.js` | grain, vignette, HUD canvas (ALTM) |
 
 Sim space is the splat normalised to its widest axis = 1 and centred, so the car is
-1 unit long. Modifier order: morph → flow → sway. `lod: false` keeps splat indices stable.
+1 unit long. Modifier order: relight → flow → sway. `lod: false` keeps splat indices stable.
 
 ## City outside the windows
 
@@ -62,3 +66,12 @@ windows just stay dark.
 
 Scene and training assets live in `E:\THESIS REVAMP\SUBWAY\Project Files\` (`C4D\Setup_1\Setup_1_graffiti.c4d`,
 `Splat\` with the camera rig, exact poses in `transforms.json` / COLMAP text, and the rendered training views).
+
+Day variant: the same 502-view rig rendered with `Setup_1_graffiti_day.c4d` (RS sun + sky dome through the windows) into
+`Splat\images_day`, poses exported to `Splat\day\transforms.json`, then a colour-only retrain from the night splat:
+
+```
+.venv310/Scripts/python train_splat.py --data day --init_splat train_01/subway_culled2.ply \
+  --freeze_geometry --freeze_opacity --mask_bright 0.97 --out train_day --iters 8000
+node tools/ply2spz.mjs ../Splat/train_day/subway_final.ply public/splats/subway_day.spz
+```
