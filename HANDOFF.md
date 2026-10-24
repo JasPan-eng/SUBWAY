@@ -95,6 +95,36 @@ Do not take a ticket that touches files another agent is editing (see **Who is o
 - [ ] **T9 Reference library** (running, Codex): public YouTube J-line window footage frames + Wikimedia/NYPL/LoC stills
   into `Web\subway-splat\refs\jline\ (git-ignored)`, with `refs.md` and a contact sheet.
 
+- [ ] **T10 Restore exterior depth in the windows** (`src/city.js`, `data/route_j.json`, `src/structure.js`). T8 rank 1:
+  verify tile readiness and route/height registration before grading; probe trackHeight offsets +/-1 m then +/-3 m
+  from -2.5, keeping floorAboveRail 1.1. Try errorTarget 6 -> 3 after alignment. Add visible trackside catwalk/railing
+  detail on the shared root (initial railing height 1.0-1.2 m); do not lift the undercar el into view artificially.
+  Acceptance: all five review cameras show near structure plus farther buildings in side windows; correct occlusion,
+  distinct near/far parallax during scroll, no pop, frame rate within 10% of baseline. See `refs/review/review.md`.
+- [ ] **T11 Repair day-car surface continuity** (`public/splats/subway.spz`, `public/splats/subway_day.spz`,
+  `src/relight.js`, `src/main.js`; source training per Pipeline, Fable). T8 rank 2: isolate First light's beige floor
+  patch at day mix 0/0.5/1 with floor helper off before assigning its cause. Use pending 800-view base retrain
+  (initial 60k iterations / 3M cap) and physically lit day renders; retrain day colours on the new geometry and
+  preserve identical Gaussian identity/order through both exports, not just count. Acceptance: floor remains solid,
+  pole bases and seats stay attached, doors/rails retain coherent silhouettes at S3-S5 and between them; no ghosting
+  or filled windows through the crossfade. Deliver paired assets, not a day file against the old base.
+- [ ] **T12 Recover daylight tonal separation** (`src/city.js`, `src/main.js`, `src/relight.js`; coordinate T6).
+  T8 rank 3: try dayGain 1.25 -> 1.05-1.10; CITY_DAY brightness 1.0, fogDensity 0.0006-0.0009,
+  skyZenith #668ab4, skyHorizon #c8d4df. Compare after T11 or retune when its assets land; city settings do not
+  repair baked interior lighting. Acceptance: matched S4/S5 captures retain shaded recesses and distinct metal,
+  blue seats and floor; exterior remains brighter than shaded interior, no broad clipped patches, night unchanged.
+- [ ] **T13 Add restrained window glass cues** (new `src/windows.js`, wiring `src/main.js`). T8 rank 4:
+  fit planes to car apertures with subtle dirt and a view-dependent interior reflection proxy. Start Fresnel F0 0.04,
+  dirt opacity 0.02-0.05, reflection strength 0.08-0.15 night / 0.02-0.05 day; disable transparent depth writes and
+  verify Spark/mesh compositing explicitly. Acceptance: reflections shift with view and stay inside openings,
+  poles/benches occlude glass correctly, no sorting flashes at all five stops; exterior remains readable.
+- [ ] **T14 Give night lighting visible sources** (new `src/practicals.js`, `src/main.js`, `src/city.js`, source
+  renders/retrained `public/splats/*` with Fable). T8 rank 5: align emissive meshes with ceiling fixtures and add
+  sparse route-anchored lamps/signals. Try interior 3800-4500 K, exterior 2200-3000 K, linear emissive intensity
+  2-4; reduce exterior emitters toward day. Bake matching interior spill into training renders; Three.js lights
+  alone cannot relight baked splat RGB. Acceptance: sources agree with rail/seat highlights, night floor and seats
+  remain readable, exterior lights have depth, no broad bloom wash and no luminous blobs in daylight.
+
 Done:
 - [x] T1: Fade city tiles in over 400 ms toward fog colour
 - [x] Day mode (Krea-relit colour variant + relight modifier) — Fable, 2737d90

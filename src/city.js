@@ -27,7 +27,7 @@ export const CITY_DEFAULTS = {
   floorAboveRail: 1.1, // car floor height above the rails (m)
   lateral: 0, // sideways offset of the car from the track centreline (m)
   dayNight: 0, // 0 = night preset, 1 = day preset (the look fields below are the result)
-  dayGain: 1.25, // brightness multiplier on the day splat colours (src/relight.js)
+  dayGain: 1.1, // brightness multiplier on the day splat colours (src/relight.js); T12
   tint: "#5a6f9a",
   brightness: 0.9,
   fog: true,
@@ -42,7 +42,7 @@ export const CITY_DEFAULTS = {
 
 /** Look presets blended by `dayNight`. */
 export const CITY_NIGHT = { tint: "#5a6f9a", brightness: 0.9, fogColor: "#0a1020", fogDensity: 0.006, skyZenith: "#0a0f1e", skyHorizon: "#2c3a63" };
-export const CITY_DAY = { tint: "#ffffff", brightness: 1.05, fogColor: "#c7d3e6", fogDensity: 0.0012, skyZenith: "#4f86d6", skyHorizon: "#d6e4f5" };
+export const CITY_DAY = { tint: "#ffffff", brightness: 1.0, fogColor: "#c7d3e6", fogDensity: 0.0008, skyZenith: "#668ab4", skyHorizon: "#c8d4df" }; // T12 review values
 
 /** Blend two look presets (colours in sRGB hex) by t. */
 export function blendLook(t) {

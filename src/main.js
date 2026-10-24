@@ -124,7 +124,7 @@ const settings = {
     source: blobParam === "webcam" ? "webcam" : blobParam?.startsWith("ws") ? "websocket" : "none",
     wsUrl: blobParam?.startsWith("ws") ? blobParam : BLOB_DEFAULTS.wsUrl,
   },
-  look: { ...LOOK_DEFAULTS, title: "SUBWAY — J LINE", background: "#0b0d12", floor: false, hud: params.has("gui") },
+  look: { ...LOOK_DEFAULTS, title: "SUBWAY — J LINE", background: "#0b0d12", floor: false, hud: params.has("gui"), grainOpacity: 0.06, grainSize: 1.0, vignetteAmount: 0.28, vignetteStart: 70 },
   city: { ...CITY_DEFAULTS, auto: params.has("free") },
   rings: { ...RING_DEFAULTS },
   plexus: { ...PLEXUS_DEFAULTS, enabled: params.has("gui") && PLEXUS_DEFAULTS.enabled },

@@ -17,7 +17,7 @@ export const STOPS = [
   { id: "broadway", sign: "Broadway", sub: "on the el · Bushwick on both sides", station: false, journey: 0.4, dayNight: 0, ride: 0.3, force: 1.6 },
   { id: "myrtle", sign: "Myrtle Av", sub: "Broadway · the centre of the line", station: true, journey: 0.5, dayNight: 0.45, ride: 0.5, force: 2.4 },
   { id: "daybreak", sign: "First light", sub: "same car, same street", station: false, journey: 0.74, dayNight: 1, ride: 0.7, force: 1.4 },
-  { id: "kosciuszko", sign: "Kosciuszko St", sub: "end of the line", station: true, journey: 1.0, dayNight: 0.9, ride: 0.78, force: 1.0 },
+  { id: "kosciuszko", sign: "Kosciuszko St", sub: "end of the line", station: true, journey: 1.0, dayNight: 1.0, ride: 0.78, force: 1.0 },
 ];
 
 const BULLET = `<span class="j-bullet" aria-hidden="true">J</span>`;
