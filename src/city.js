@@ -29,7 +29,7 @@ export const CITY_DEFAULTS = {
   floorAboveRail: 1.1, // car floor height above the rails (m)
   lateral: 0, // sideways offset of the car from the track centreline (m)
   dayNight: 0, // 0 = night preset, 1 = day preset (the look fields below are the result)
-  dayGain: 1.1, // brightness multiplier on the day splat colours (src/relight.js); T12
+  dayGain: 1.0, // brightness multiplier on the day splat colours (src/relight.js); 1.1 suited the dim Krea variant, the Redshift-lit one needs none
   tint: "#5a6f9a",
   brightness: 0.9,
   fog: true,

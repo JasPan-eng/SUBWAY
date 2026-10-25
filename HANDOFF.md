@@ -42,7 +42,8 @@ Redshift renders on this machine (same GPU).
 
 - Trainer: `Splat\train_splat.py` (gsplat 1.5.2, venv `Splat\.venv310`). Exact poses, no COLMAP.
 - Day colour variant from Krea-relit frames (shipped):
-  `python train_splat.py --data krea_day/full_data --init_splat train_01/subway_culled2.ply --freeze_geometry --freeze_opacity --reset_sh --mask_from_night images --out krea_day/train_full --iters 15000 --lr_sh0 0.01`
+  `python train_splat.py --data day --init_splat train_01/subway_culled2.ply --freeze_geometry --freeze_opacity --reset_sh --mask_from_night images --mask_bright 0.97 --out train_day_rs --iters 15000 --lr_sh0 0.01`
+  (the shipped day variant: Redshift day pass in `Splat\images_day`; the earlier Krea variant used `--data krea_day/full_data`, kept in `Splatariants\`)
   then `node tools/ply2spz.mjs <ply> public/splats/subway_day.spz 0 0.02`. Same recipe for any themed variant.
 - Redshift day pass (physically lit): when `Splat\images_day` has 502 frames, same command with
   `--data day --mask_bright 0.97` (no `--mask_from_night`), compare against the Krea result, ship the better one.
@@ -148,6 +149,7 @@ eview\` plus 6 reference frames from `Refs\jline\`. Codex reviews them
   preserve identical Gaussian identity/order through both exports, not just count. Acceptance: floor remains solid,
   pole bases and seats stay attached, doors/rails retain coherent silhouettes at S3-S5 and between them; no ghosting
   or filled windows through the crossfade. Deliver paired assets, not a day file against the old base.
+  Part 1 done 2026-10-25: the Redshift day pass is rendered (502) and its colour-only retrain replaced `subway_day.spz` (dayGain 1.0). Part 2 (v2 geometry + paired day colours) waits for `images_v2` (800 frames, rendering).
 - [ ] **T12 Recover daylight tonal separation** (`src/city.js`, `src/main.js`, `src/relight.js`; coordinate T6).
   T8 rank 3: try dayGain 1.25 -> 1.05-1.10; CITY_DAY brightness 1.0, fogDensity 0.0006-0.0009,
   skyZenith #668ab4, skyHorizon #c8d4df. Compare after T11 or retune when its assets land; city settings do not
