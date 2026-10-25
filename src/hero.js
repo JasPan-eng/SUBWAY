@@ -3,9 +3,41 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import corner from "../data/myrtle_corner.json";
 
-// stationOffset: metres to the left of travel; the generated station is one 22 x 19.5 m block whose platform deck
-// would otherwise sit across the track. stationLift puts the deck top at platform height (rail + 1.2 m).
-export const HERO_DEFAULTS = { enabled: true, discard: true, groundY: -10.5, stationHeight: 14, stationLift: 1.2, stationOffset: 12 };
+// stationOffset: metres to the left of travel for the station house (one 22 x 19.5 m block), clear of the platforms.
+// Platforms: generated 12 m modules (open / canopy) tiled for platformHalf metres either side of the stop, both sides
+// of the track, track edge platformEdge m from the centreline, deck top platformDeck m above the rails (car floor).
+export const HERO_DEFAULTS = {
+  enabled: true, discard: true, groundY: -10.5, stationHeight: 14, stationLift: 1.2, stationOffset: 17,
+  platforms: true, platformHalf: 75, canopyHalf: 30, platformEdge: 1.65, platformDeck: 1.1, moduleLength: 12, flipPlatforms: false,
+};
+
+/** Deck height and track side of a platform module, from its normalised geometry (long axis = x, bottom at y 0). */
+function measurePlatform(geometry, size) {
+  const pos = geometry.attributes.position, idx = geometry.index;
+  const bins = new Float32Array(50);
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  const ab = new THREE.Vector3(), ac = new THREE.Vector3(), n = new THREE.Vector3();
+  const tri = idx ? idx.count / 3 : pos.count / 3;
+  for (let t = 0; t < tri; t++) {
+    const i0 = idx ? idx.getX(3 * t) : 3 * t, i1 = idx ? idx.getX(3 * t + 1) : 3 * t + 1, i2 = idx ? idx.getX(3 * t + 2) : 3 * t + 2;
+    a.fromBufferAttribute(pos, i0); b.fromBufferAttribute(pos, i1); c.fromBufferAttribute(pos, i2);
+    n.crossVectors(ab.subVectors(b, a), ac.subVectors(c, a));
+    const area = n.length() / 2;
+    if (area <= 0 || Math.abs(n.y) / (2 * area) < 0.95) continue;
+    const y = (a.y + b.y + c.y) / 3 / size.y;
+    if (y < 0.75) bins[Math.min(49, Math.floor(y * 50))] += area;
+  }
+  let best = 0;
+  for (let i = 1; i < 50; i++) if (bins[i] > bins[best]) best = i;
+  const deckY = (best + 1) / 50 * size.y;
+  // Fence, railing and bench stand at the back: the track edge is on the other side.
+  let sum = 0, count = 0;
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i) - deckY;
+    if (y > 0.05 * size.y && y < 0.2 * size.y) { sum += pos.getZ(i); count++; }
+  }
+  return { deckY, trackSign: count && sum / count > 0 ? -1 : 1 };
+}
 
 function footprint(building) {
   let longest = 0, yaw = 0;
@@ -31,7 +63,8 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
   frame.name = "myrtle-hero";
   frame.rotation.y = Math.PI;
   root.add(frame);
-  let settings = { ...HERO_DEFAULTS }, disposed = false, pending = 3;
+  let settings = { ...HERO_DEFAULTS }, disposed = false, pending = 5;
+  const platformPoint = {};
   const color = new THREE.Color().copy(tint);
   const station = route.sample(route.stations["Myrtle Av-Broadway"].s);
   station.yaw = Math.atan2(station.dy, station.dx);
@@ -41,8 +74,8 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
   for (let offset = -150; offset <= 150; offset += 5) samples.push(route.sample(station.s + offset));
   const fastfood = footprint(corner.buildings.find((b) => b.id === 250317334));
   // Nearest tenement footprints only: one model repeated 68 times reads as a pattern, and the discard
-  // uniform holds 32 boxes (station + fast food + 30).
-  const TENEMENT_RANGE = 80, TENEMENT_MAX = 30;
+  // uniform holds 32 boxes (station + platforms + fast food + 29).
+  const TENEMENT_RANGE = 80, TENEMENT_MAX = 29;
   const buildings = corner.buildings.filter((b) => b.id !== fastfood.id && b.dist <= TENEMENT_RANGE && b.height >= 8 && b.height <= 14
     && samples.every((p) => (b.x - p.x) ** 2 + (b.y - p.y) ** 2 > 144)).slice(0, TENEMENT_MAX).map(footprint);
   const assets = [];
@@ -86,7 +119,11 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
       count++;
     }
     // Stable box order regardless of which network request completes first.
-    for (const kind of ["station", "fastfood", "tenement"]) {
+    for (const kind of ["station", "platforms", "fastfood", "tenement"]) {
+      if (kind === "platforms") {
+        layoutPlatforms(box);
+        continue;
+      }
       const asset = assets.find((a) => a.kind === kind);
       if (!asset) continue;
       if (kind === "station") {
@@ -125,6 +162,44 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
     discardUniforms.uHeroCount.value = settings.enabled && settings.discard ? count : 0;
   }
 
+  function layoutPlatforms(box) {
+    const open = assets.find((a) => a.kind === "platform_open"), canopy = assets.find((a) => a.kind === "platform_canopy");
+    if (!open || !canopy) return;
+    const L = settings.moduleLength;
+    let nOpen = 0, nCanopy = 0, widest = 0;
+    if (settings.platforms) {
+      for (let o = -settings.platformHalf + L / 2; o <= settings.platformHalf - L / 2 + 1e-6; o += L) {
+        const asset = Math.abs(o) < settings.canopyHalf ? canopy : open;
+        const k = L / asset.size.x, width = asset.size.z * k;
+        widest = Math.max(widest, width);
+        route.sample(station.s + o, platformPoint);
+        const yaw = Math.atan2(platformPoint.dy, platformPoint.dx);
+        for (const side of [1, -1]) { // +1 = left of travel
+          const lateral = side * (settings.platformEdge + width / 2);
+          // Local +z faces right of travel, so the left platform wants its track edge on +z.
+          const want = side > 0 ? 1 : -1;
+          const turn = (asset.trackSign === want) !== settings.flipPlatforms ? 0 : Math.PI;
+          position.set(platformPoint.x - Math.sin(yaw) * lateral, settings.platformDeck - asset.deckY * k, -(platformPoint.y + Math.cos(yaw) * lateral));
+          quaternion.setFromAxisAngle(up, yaw + turn);
+          scale.set(k, k, k);
+          matrix.compose(position, quaternion, scale);
+          asset.mesh.setMatrixAt(asset === canopy ? nCanopy++ : nOpen++, matrix);
+        }
+      }
+    }
+    for (const [asset, n] of [[open, nOpen], [canopy, nCanopy]]) {
+      asset.mesh.count = n;
+      asset.mesh.instanceMatrix.needsUpdate = true;
+      asset.mesh.computeBoundingBox();
+      asset.mesh.computeBoundingSphere();
+      asset.mesh.updateMatrixWorld(true);
+    }
+    if (settings.platforms) {
+      boxPoint.x = station.x; boxPoint.y = station.y; boxPoint.yaw = station.yaw;
+      box(boxPoint, 2 * settings.platformHalf + 4, 2 * (settings.platformEdge + widest) + 2);
+    }
+  }
+
   function load(kind, file, points) {
     loader.load(`${base}props/hero/${file}.glb`, (gltf) => {
       const source = gltf.scene;
@@ -146,6 +221,7 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
         geometry.translate(-(bounds.min.x + bounds.max.x) / 2, -bounds.min.y, -(bounds.min.z + bounds.max.z) / 2);
         geometry.computeBoundingBox();
         geometry.computeBoundingSphere();
+        const measured = kind.startsWith("platform") ? measurePlatform(geometry, size) : null;
         const material = original.material;
         const originalColor = material.color.clone();
         const uFade = { value: 0 };
@@ -162,10 +238,12 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
             .replace("#include <dithering_fragment>", "#include <dithering_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uCityFogColor, 1.0 - exp(-uCityFogDensity * vCityDepth));\ngl_FragColor.rgb = mix(uCityFogColor, gl_FragColor.rgb, uFade);");
         };
         material.customProgramCacheKey = () => "city-hero-fog-v1";
-        const mesh = kind === "tenement" ? new THREE.InstancedMesh(geometry, material, points.length) : new THREE.Mesh(geometry, material);
+        const capacity = measured ? 64 : points.length;
+        const mesh = kind === "tenement" || measured ? new THREE.InstancedMesh(geometry, material, capacity) : new THREE.Mesh(geometry, material);
+        if (measured) mesh.count = 0;
         mesh.name = file;
         frame.add(mesh);
-        assets.push({ kind, points, mesh, source, size, originalColor, uFade, elapsed: 0 });
+        assets.push({ kind, points, mesh, source, size, originalColor, uFade, elapsed: 0, ...measured });
         layout();
       } catch (error) {
         geometry?.dispose();
@@ -180,6 +258,8 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
     });
   }
   load("station", "myrtle_station", [station]);
+  load("platform_open", "platform_open", null);
+  load("platform_canopy", "platform_canopy", null);
   load("fastfood", "corner_fastfood", [fastfood]);
   load("tenement", "bushwick_3storey", buildings);
 

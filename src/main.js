@@ -219,7 +219,12 @@ gHero.add(settings.hero, "discard").onChange(applyHero);
 gHero.add(settings.hero, "groundY", -20, 0, 0.1).onChange(applyHero);
 gHero.add(settings.hero, "stationHeight", 8, 20, 0.1).onChange(applyHero);
 gHero.add(settings.hero, "stationLift", -5, 5, 0.1).onChange(applyHero);
-gHero.add(settings.hero, "stationOffset", -20, 20, 0.5).onChange(applyHero);
+gHero.add(settings.hero, "stationOffset", -30, 30, 0.5).onChange(applyHero);
+gHero.add(settings.hero, "platforms").onChange(applyHero);
+gHero.add(settings.hero, "platformEdge", 1, 3, 0.05).onChange(applyHero);
+gHero.add(settings.hero, "platformDeck", 0, 2.5, 0.05).onChange(applyHero);
+gHero.add(settings.hero, "canopyHalf", 0, 75, 1).onChange(applyHero);
+gHero.add(settings.hero, "flipPlatforms").onChange(applyHero);
 applyHero();
 
 const gWin = gui.addFolder("windows");
