@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Explore Krea-generated 3D models on the real Brooklyn block around Myrtle Av-Broadway." />
+  <title>Brooklyn block — Krea models</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d12; --fg: #e9e7e2; --fg-dim: #a9a7a1;
+      --line: rgba(233, 231, 226, 0.18); --panel: #15181f; --j: #996633;
+      --font: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+      --mono: ui-monospace, Menlo, Consolas, monospace;
+      --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px; --s12: 48px;
+      --z-look: 10; --z-ride: 20; --z-intro: 30; --z-gui: 40;
+    }
+    .j-bullet {
+      display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; border-radius: 50%;
+      background: var(--j); color: #fff; font-weight: 700; font-size: 0.8em; line-height: 1; letter-spacing: 0; flex: none;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font); }
+    canvas { display: block; touch-action: none; }
+    button, input, a { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+    button:hover { border-color: var(--fg-dim); }
+    :focus-visible { outline: 2px solid #e2b77d; outline-offset: 3px; }
+    a { color: var(--fg); text-underline-offset: 3px; }
+    [hidden] { display: none !important; }
+    #map, #labels { position: fixed; inset: 0; }
+    #labels { pointer-events: none; }
+    .street-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; color: #333941; background: rgba(233,231,226,0.7); padding: 0 4px; border-radius: 2px; pointer-events: none; }
+    #progress { position: fixed; z-index: 60; top: 0; left: 0; height: 3px; width: 100%; background: #caa374; transform-origin: left; }
+    #title { position: fixed; top: 16px; left: 16px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); max-width: calc(100% - 368px); }
+    h1 { font-size: 20px; margin: 0; display: flex; gap: 8px; align-items: center; }
+    #title p { font-size: 11px; color: var(--fg-dim); margin: 4px 0 8px; }
+    #title a { font-size: 12px; }
+    #panel { position: fixed; right: 16px; top: 16px; width: 320px; max-height: calc(100% - 232px); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+    #panel-toggle { width: 100%; text-align: left; border: 0; border-radius: 0; display: flex; align-items: center; justify-content: space-between; min-height: 44px; touch-action: none; }
+    #panel-toggle::after { content: '−'; }
+    #panel.collapsed #panel-toggle::after { content: '+'; }
+    #panel.collapsed #panel-body { display: none; }
+    #handle { display: none; }
+    #panel-body { display: flex; flex-direction: column; min-height: 0; }
+    #search { margin: 0 12px 12px; width: calc(100% - 24px); padding: 8px 12px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; }
+    #model-list { overflow: auto; overscroll-behavior: contain; padding: 0 12px 12px; }
+    .category { margin: 12px 0 4px; color: var(--fg-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; }
+    .model-row { position: relative; display: grid; grid-template-columns: 56px minmax(0,1fr); gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .thumb { width: 56px; height: 56px; object-fit: cover; background: #292e37; border-radius: 4px; display: grid; place-items: center; color: var(--fg-dim); }
+    .model-main { min-width: 0; border: 0; padding: 0; text-align: left; background: transparent; border-radius: 0; display: block; width: 100%; }
+    .model-name { display: block; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .model-description { display: block; font-size: 11px; color: var(--fg-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .model-meta { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--fg-dim); }
+    .tag { border: 1px solid var(--line); padding: 0 4px; border-radius: 3px; }
+    .inspect-button { padding: 0 4px; font-size: 11px; border: 0; margin-left: auto; text-decoration: underline; text-underline-offset: 2px; }
+    #buttons { position: fixed; right: 16px; bottom: 32px; display: grid; gap: 8px; }
+    #buttons button { border-radius: 50%; width: 40px; height: 40px; padding: 0; }
+    #needle { display: inline-block; color: #e2b77d; }
+    #tooltip { position: fixed; padding: 4px 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; pointer-events: none; font-size: 12px; z-index: 25; max-width: 240px; }
+    footer { position: fixed; bottom: 8px; left: 12px; max-width: calc(100% - 80px); font-size: 11px; color: #454a50; background: rgba(233,231,226,0.85); padding: 0 4px; border-radius: 2px; pointer-events: none; }
+    #notice { position: fixed; left: 16px; top: 136px; max-width: 300px; background: var(--panel); padding: 8px 12px; border-radius: 4px; font-size: 12px; }
+    #inspect { position: fixed; inset: 0; z-index: 40; pointer-events: none; }
+    #inspect header { position: absolute; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+    #inspect button, #inspect-info, #reference { pointer-events: auto; }
+    #inspect-info { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; position: absolute; bottom: 24px; left: 24px; width: min(440px, calc(100% - 48px)); }
+    #inspect-name { font-size: 20px; margin: 0 0 8px; }
+    #inspect-description { color: var(--fg-dim); margin: 0 0 8px; }
+    #inspect-size, #inspect-status { font-size: 12px; color: var(--fg-dim); }
+    #reference { position: absolute; right: 16px; top: 76px; width: min(200px, 40vw); border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+    body.inspecting #title, body.inspecting #panel, body.inspecting #buttons, body.inspecting footer, body.inspecting #labels, body.inspecting #notice { display: none; }
+    @media (max-width: 700px) {
+      #title { top: 8px; left: 8px; max-width: calc(100% - 16px); padding: 8px 12px; }
+      h1 { font-size: 18px; }
+      #panel { top: auto; bottom: 0; right: 0; width: 100%; max-height: 65dvh; border-radius: 16px 16px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+      #panel-toggle { padding-top: 20px; }
+      #handle { display: block; position: absolute; top: 8px; left: calc(50% - 20px); width: 40px; height: 4px; border-radius: 4px; background: var(--fg-dim); }
+      #model-list { height: 252px; }
+      #panel.expanded #model-list { height: 45dvh; }
+      #buttons { right: 12px; bottom: 380px; }
+      body.panel-collapsed #buttons { bottom: 100px; }
+      footer { bottom: 356px; left: 8px; max-width: calc(100% - 16px); font-size: 10px; }
+      body.panel-collapsed footer { bottom: 60px; }
+      #notice { top: 120px; left: 8px; }
+      #inspect-info { bottom: 16px; left: 16px; width: calc(100% - 32px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="map" aria-label="Brooklyn 3D map"></div>
+  <div id="labels" aria-hidden="true"></div>
+  <div id="progress" role="progressbar" aria-label="Loading 3D models" aria-valuemin="0" aria-valuemax="100" hidden></div>
+  <header id="title"><h1><span class="j-bullet">J</span>Brooklyn block</h1><p>Krea-generated models · Myrtle Av-Broadway</p><a href="./index.html">Ride the J →</a></header>
+  <aside id="panel" aria-label="Krea models">
+    <button id="panel-toggle" aria-expanded="true" aria-controls="panel-body"><span id="handle"></span><span>Models <span id="model-count"></span></span></button>
+    <div id="panel-body"><input id="search" type="search" aria-label="Search models by name" placeholder="Search models" /><div id="model-list"></div></div>
+  </aside>
+  <nav id="buttons" aria-label="Map controls">
+    <button id="compass" aria-label="Reset heading to north" title="North up"><span id="needle">▲</span><small>N</small></button>
+    <button id="tilt" aria-label="Switch to top-down view" title="Toggle 2D / 3D">2D</button>
+    <button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button>
+  </nav>
+  <div id="tooltip" role="tooltip" hidden></div><div id="notice" role="status" hidden></div>
+  <footer>Streets and buildings © OpenStreetMap contributors · Models generated with Krea (Hunyuan3D)</footer>
+  <section id="inspect" role="dialog" aria-modal="true" aria-labelledby="inspect-name" hidden>
+    <header><button id="back">← Back to map</button><button id="reference-toggle" aria-expanded="false" aria-controls="reference">Source image</button></header>
+    <img id="reference" alt="Source reference for this generated model" hidden />
+    <div id="inspect-info"><h2 id="inspect-name"></h2><p id="inspect-description"></p><span id="inspect-size"></span><p id="inspect-status" role="status"></p></div>
+  </section>
+  <script type="module" src="/src/explore/main.js"></script>
+</body>
+</html>

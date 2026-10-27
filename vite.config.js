@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   server: {
@@ -13,6 +14,12 @@ export default defineConfig({
     },
   },
   build: {
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL("./index.html", import.meta.url)),
+        explore: fileURLToPath(new URL("./explore.html", import.meta.url)),
+      },
+    },
     target: "es2022",
     sourcemap: true,
   },

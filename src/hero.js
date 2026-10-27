@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import corner from "../data/myrtle_corner.json";
+import { alignPlan } from "./align.js";
 
 // stationOffset: metres to the left of travel for the station house (one 22 x 19.5 m block), clear of the platforms.
 // Platforms: generated 12 m modules (open / canopy) tiled for platformHalf metres either side of the stop, both sides
@@ -64,7 +65,7 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
   frame.rotation.y = Math.PI;
   root.add(frame);
   let settings = { ...HERO_DEFAULTS }, disposed = false, pending = 5;
-  const platformPoint = {};
+  const platformPoint = {}, chordA = {}, chordB = {};
   const color = new THREE.Color().copy(tint);
   const station = route.sample(route.stations["Myrtle Av-Broadway"].s);
   station.yaw = Math.atan2(station.dy, station.dx);
@@ -77,8 +78,12 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
   // uniform holds 32 boxes (station + platforms + fast food + 29).
   const TENEMENT_RANGE = 80, TENEMENT_MAX = 29;
   const buildings = corner.buildings.filter((b) => b.id !== fastfood.id && b.dist <= TENEMENT_RANGE && b.height >= 8 && b.height <= 14
-    && samples.every((p) => (b.x - p.x) ** 2 + (b.y - p.y) ** 2 > 144)).slice(0, TENEMENT_MAX).map(footprint);
+    && samples.every((p) => (b.x - p.x) ** 2 + (b.y - p.y) ** 2 > 144)).map(footprint)
+    // A 3-storey walk-up is 6-12 m wide and up to ~30 m deep; bigger footprints are blocks or factories.
+    .filter((f) => f.length <= 32 && f.width <= 16).slice(0, TENEMENT_MAX);
   const assets = [];
+  const placed = [], placementPool = [];
+  const placementMatrix = new THREE.Matrix4();
   const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), scale = new THREE.Vector3();
   const quaternion = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
   const draco = new DRACOLoader();
@@ -160,6 +165,24 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
       discardUniforms.uHeroRot.value[i].set(1, 0);
     }
     discardUniforms.uHeroCount.value = settings.enabled && settings.discard ? count : 0;
+    // Public bounds are in root coordinates, excluding root's own world transform.
+    frame.updateMatrix();
+    placed.length = 0;
+    for (const asset of assets) {
+      const n = asset.mesh.isInstancedMesh ? asset.mesh.count : 1;
+      asset.mesh.updateMatrix();
+      for (let i = 0; i < n; i++) {
+        if (asset.mesh.isInstancedMesh) asset.mesh.getMatrixAt(i, placementMatrix);
+        else placementMatrix.identity();
+        placementMatrix.premultiply(asset.mesh.matrix).premultiply(frame.matrix);
+        const entry = placementPool[placed.length] ?? (placementPool[placed.length] = { box: new THREE.Box3() });
+        entry.kind = asset.kind;
+        entry.name = asset.mesh.name;
+        entry.footprintId = asset.points?.[i]?.id ?? null;
+        entry.box.copy(asset.mesh.geometry.boundingBox).applyMatrix4(placementMatrix);
+        placed.push(entry);
+      }
+    }
   }
 
   function layoutPlatforms(box) {
@@ -172,8 +195,13 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
         const asset = Math.abs(o) < settings.canopyHalf ? canopy : open;
         const k = L / asset.size.x, width = asset.size.z * k;
         widest = Math.max(widest, width);
-        route.sample(station.s + o, platformPoint);
-        const yaw = Math.atan2(platformPoint.dy, platformPoint.dx);
+        // Heading from the chord this section covers: the route's smoothed heading is ~25 deg off at Myrtle,
+        // where the line bends, and the sections would sit like shingles.
+        route.sample(station.s + o - L / 2, chordA);
+        route.sample(station.s + o + L / 2, chordB);
+        platformPoint.x = (chordA.x + chordB.x) / 2;
+        platformPoint.y = (chordA.y + chordB.y) / 2;
+        const yaw = Math.atan2(chordB.y - chordA.y, chordB.x - chordA.x);
         for (const side of [1, -1]) { // +1 = left of travel
           const lateral = side * (settings.platformEdge + width / 2);
           // Local +z faces right of travel, so the left platform wants its track edge on +z.
@@ -211,6 +239,7 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
         source.traverse((object) => { if (object.isMesh && !original) original = object; });
         if (!original || Array.isArray(original.material)) throw new Error("Expected one mesh and material");
         geometry = original.geometry.clone().applyMatrix4(original.matrixWorld);
+        alignPlan(geometry); // generated models keep the 3/4 angle of their reference image
         geometry.computeBoundingBox();
         const size = geometry.boundingBox.getSize(new THREE.Vector3());
         if (size.z > size.x) geometry.rotateY(Math.PI / 2);
@@ -264,6 +293,8 @@ export function createHero({ root, route, base, fogUniforms, tint, discardUnifor
   load("tenement", "bushwick_3storey", buildings);
 
   return {
+    placements() { return placed; },
+    get ready() { return pending === 0; },
     configure(p) {
       const next = p.hero;
       let changed = false;

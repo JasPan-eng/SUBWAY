@@ -1,0 +1,89 @@
+{
+  "generated": "2026-10-27T23:06:52+00:00",
+  "models": [
+    {
+      "id": "myrtle_station",
+      "name": "Myrtle Av-Broadway station house",
+      "category": "station",
+      "description": "Mezzanine, glass-block elevator tower and street stair of the J/M/Z station, from Wikimedia Commons photos.",
+      "file": "props/hero/myrtle_station.glb",
+      "thumb": "props/krea/thumbs/myrtle_station.webp",
+      "ref": "props/krea/thumbs/myrtle_station_ref.webp",
+      "bytes": 837616,
+      "made": "2026-10-25",
+      "placement": {
+        "type": "hero"
+      }
+    },
+    {
+      "id": "platform_canopy",
+      "name": "Platform section with canopy",
+      "category": "station",
+      "description": "12 m covered side platform: green steel canopy on bracketed columns, yellow tactile edge, bench. Tiled 60 m at Myrtle.",
+      "file": "props/hero/platform_canopy.glb",
+      "thumb": "props/krea/thumbs/platform_canopy.webp",
+      "ref": "props/krea/thumbs/platform_canopy_ref.webp",
+      "bytes": 720444,
+      "made": "2026-10-26",
+      "placement": {
+        "type": "hero"
+      }
+    },
+    {
+      "id": "platform_open",
+      "name": "Open platform section",
+      "category": "station",
+      "description": "12 m open side platform: double-globe lamp post, picket fence, concrete-cased column. Tiled at both platform ends.",
+      "file": "props/hero/platform_open.glb",
+      "thumb": "props/krea/thumbs/platform_open.webp",
+      "ref": "props/krea/thumbs/platform_open_ref.webp",
+      "bytes": 819860,
+      "made": "2026-10-26",
+      "placement": {
+        "type": "hero"
+      }
+    },
+    {
+      "id": "el_bent",
+      "name": "Elevated structure bent",
+      "category": "structure",
+      "description": "One section of the riveted green steel el over Broadway, repeated along the whole J route.",
+      "file": "props/el_bent.glb",
+      "thumb": "props/krea/thumbs/el_bent.webp",
+      "ref": "props/krea/thumbs/el_bent_ref.webp",
+      "bytes": 779432,
+      "made": "2026-10-25",
+      "placement": {
+        "type": "hero"
+      }
+    },
+    {
+      "id": "bushwick_3storey",
+      "name": "Bushwick corner tenement",
+      "category": "building",
+      "description": "Three-storey brick tenement with cornice, fire escapes and a shop at street level. Fitted to the nearest 3-storey footprints.",
+      "file": "props/hero/bushwick_3storey.glb",
+      "thumb": "props/krea/thumbs/bushwick_3storey.webp",
+      "ref": "props/krea/thumbs/bushwick_3storey_ref.webp",
+      "bytes": 1016852,
+      "made": "2026-10-25",
+      "placement": {
+        "type": "hero"
+      }
+    },
+    {
+      "id": "corner_fastfood",
+      "name": "Corner fast-food block",
+      "category": "building",
+      "description": "One-storey corner block with three storefronts and roof units, on the footprint across from the station.",
+      "file": "props/hero/corner_fastfood.glb",
+      "thumb": "props/krea/thumbs/corner_fastfood.webp",
+      "ref": "props/krea/thumbs/corner_fastfood_ref.webp",
+      "bytes": 493572,
+      "made": "2026-10-25",
+      "placement": {
+        "type": "hero"
+      }
+    }
+  ]
+}

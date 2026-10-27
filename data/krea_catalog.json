@@ -1,0 +1,59 @@
+{
+  "about": "Source of truth for every Krea-generated 3D model. Fable adds entries as models are made; tools/krea_assets.py turns this into public/props/krea/manifest.json (optimised GLBs + thumbnails). Raw files live outside the repo in ../../Refs/krea3d/<id>_raw.glb, <id>_preview.png (Hunyuan render), <id>_ref.png (Krea reference image).",
+  "models": [
+    {
+      "id": "myrtle_station",
+      "name": "Myrtle Av-Broadway station house",
+      "category": "station",
+      "description": "Mezzanine, glass-block elevator tower and street stair of the J/M/Z station, from Wikimedia Commons photos.",
+      "published": "props/hero/myrtle_station.glb",
+      "placement": { "type": "hero" },
+      "made": "2026-10-25"
+    },
+    {
+      "id": "platform_canopy",
+      "name": "Platform section with canopy",
+      "category": "station",
+      "description": "12 m covered side platform: green steel canopy on bracketed columns, yellow tactile edge, bench. Tiled 60 m at Myrtle.",
+      "published": "props/hero/platform_canopy.glb",
+      "placement": { "type": "hero" },
+      "made": "2026-10-26"
+    },
+    {
+      "id": "platform_open",
+      "name": "Open platform section",
+      "category": "station",
+      "description": "12 m open side platform: double-globe lamp post, picket fence, concrete-cased column. Tiled at both platform ends.",
+      "published": "props/hero/platform_open.glb",
+      "placement": { "type": "hero" },
+      "made": "2026-10-26"
+    },
+    {
+      "id": "el_bent",
+      "name": "Elevated structure bent",
+      "category": "structure",
+      "description": "One section of the riveted green steel el over Broadway, repeated along the whole J route.",
+      "published": "props/el_bent.glb",
+      "placement": { "type": "hero" },
+      "made": "2026-10-25"
+    },
+    {
+      "id": "bushwick_3storey",
+      "name": "Bushwick corner tenement",
+      "category": "building",
+      "description": "Three-storey brick tenement with cornice, fire escapes and a shop at street level. Fitted to the nearest 3-storey footprints.",
+      "published": "props/hero/bushwick_3storey.glb",
+      "placement": { "type": "hero" },
+      "made": "2026-10-25"
+    },
+    {
+      "id": "corner_fastfood",
+      "name": "Corner fast-food block",
+      "category": "building",
+      "description": "One-storey corner block with three storefronts and roof units, on the footprint across from the station.",
+      "published": "props/hero/corner_fastfood.glb",
+      "placement": { "type": "hero" },
+      "made": "2026-10-25"
+    }
+  ]
+}
