@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-27T23:21:58+00:00",
+  "generated": "2026-10-27T23:27:46+00:00",
   "models": [
     {
       "id": "myrtle_station",
@@ -164,6 +164,99 @@
         "lateral": -11.0,
         "yawDeg": 0,
         "length": 9.0
+      }
+    },
+    {
+      "id": "storefront_row",
+      "name": "One-storey storefront row",
+      "category": "building",
+      "description": "Three small shops under the el on Broadway with coloured sign bands and tagged roll-down shutters.",
+      "file": "props/krea/storefront_row.glb",
+      "thumb": "props/krea/thumbs/storefront_row.webp",
+      "ref": "props/krea/thumbs/storefront_row_ref.webp",
+      "bytes": 734384,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250325829,
+          250317212,
+          250317263,
+          250408711,
+          250406608,
+          250405907
+        ]
+      }
+    },
+    {
+      "id": "frame_house",
+      "name": "Bushwick frame house",
+      "category": "building",
+      "description": "Two-and-a-half storey row house in beige vinyl siding with a concrete stoop and chain-link front fence.",
+      "file": "props/krea/frame_house.glb",
+      "thumb": "props/krea/thumbs/frame_house.webp",
+      "ref": "props/krea/thumbs/frame_house_ref.webp",
+      "bytes": 752980,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250405989,
+          250408581,
+          250408620,
+          250408640,
+          250408598,
+          250406077,
+          250408606,
+          250408611,
+          250408618,
+          250408616
+        ]
+      }
+    },
+    {
+      "id": "brownstone",
+      "name": "Brooklyn brownstone",
+      "category": "building",
+      "description": "Brownstone row house with a high stoop, curved cast-iron railings, carved lintels and a bracketed cornice.",
+      "file": "props/krea/brownstone.glb",
+      "thumb": "props/krea/thumbs/brownstone.webp",
+      "ref": "props/krea/thumbs/brownstone_ref.webp",
+      "bytes": 1117080,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408605,
+          250408602,
+          250408609,
+          250406018,
+          250406045,
+          250408626,
+          250317266,
+          250317261
+        ]
+      }
+    },
+    {
+      "id": "corner_deli",
+      "name": "Corner deli",
+      "category": "building",
+      "description": "Two-storey brick corner building with a yellow deli sign band, striped awnings and posters behind the glass.",
+      "file": "props/krea/corner_deli.glb",
+      "thumb": "props/krea/thumbs/corner_deli.webp",
+      "ref": "props/krea/thumbs/corner_deli_ref.webp",
+      "bytes": 1002840,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408615,
+          250408621,
+          250408614,
+          250408641,
+          250408637
+        ]
       }
     }
   ]
