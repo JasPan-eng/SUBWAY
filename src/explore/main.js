@@ -7,6 +7,7 @@ import { createHero, HERO_DEFAULTS } from '../hero.js';
 import { createStructure } from '../structure.js';
 import { createAssetStore, placeExtra } from './assets.js';
 import { createMapLayers } from './layers.js';
+import { createStreetPlanner, placeStreet } from './props.js';
 import { createNavigation } from './navigation.js';
 import { createInspector } from './inspect.js';
 import { createPanel } from './panel.js';
@@ -61,6 +62,8 @@ THREE.DefaultLoadingManager.onLoad = () => { progress.hidden = true; needsSync =
 THREE.DefaultLoadingManager.onError = () => { notify('Some model assets could not load. Available models remain browsable.'); needsSync = true; };
 const hero = createHero({ root, route, base, fogUniforms, tint: new THREE.Color(1, 1, 1), discardUniforms });
 hero.configure({ hero: { ...HERO_DEFAULTS }, tint: '#ffffff', brightness: 1.0 });
+let resolveHeroReady;
+const heroReady = new Promise((resolve) => { resolveHeroReady = resolve; });
 if (new URLSearchParams(location.search).has('debug')) window.__explore = { THREE, scene, root, hero, route };
 const structure = createStructure({ root, route, base, scene, fogUniforms });
 structure.configure({ tint: '#ffffff', brightness: 1.0, skyZenith: '#9fb4cc', fogColor: '#c8d4df', enabled: true });
@@ -81,6 +84,14 @@ function clearPulse() {
   pulses.length = 0;
 }
 function select(model, box = model.box) {
+  if (model.placement?.type === 'street' && box === model.box) {
+    let nearest = Infinity;
+    for (const mesh of model.meshes) for (const candidate of mesh.userData.instanceBoxes ?? []) {
+      candidate.getCenter(selectionCenter);
+      const distance = selectionCenter.distanceToSquared(navigation.controls.target);
+      if (distance < nearest) { nearest = distance; box = candidate; }
+    }
+  }
   if (box.isEmpty()) { inspector.open(model); return; }
   navigation.flyTo(box); clearPulse();
   const materials = new Set();
@@ -94,6 +105,7 @@ function select(model, box = model.box) {
 }
 const panel = createPanel({ base, select, inspect: (model) => inspector.open(model) });
 const rootBox = new THREE.Box3(), instanceMatrix = new THREE.Matrix4(), worldMatrix = new THREE.Matrix4();
+const selectionCenter = new THREE.Vector3();
 function syncModels() {
   renderer.shadowMap.needsUpdate = true;
   root.updateWorldMatrix(true, true);
@@ -145,6 +157,15 @@ async function loadManifest() {
     try { await placeExtra(model, { store, frame, route, buildings, covered, pickables }); }
     catch { notify(`Could not place ${model.name}. You can retry it in Inspect.`); }
   }));
+  const streetModels = models.filter((model) => model.placement?.type === 'street');
+  if (streetModels.length) {
+    await heroReady;
+    const plan = createStreetPlanner(block, discardUniforms);
+    await Promise.all(streetModels.map(async (model) => {
+      try { await placeStreet(model, { store, frame, pickables, plan }); }
+      catch { notify(`Could not place ${model.name}. You can retry it in Inspect.`); }
+    }));
+  }
   extrasReady = true; needsSync = true;
 }
 loadManifest().catch(() => { extrasReady = true; notify('The model catalog could not load. The block map is still available.'); });
@@ -188,7 +209,7 @@ let previous = performance.now(), headingValue = Infinity, topDown = false, hero
 function animate(now) {
   const dt = Math.min(0.05, (now - previous) / 1000); previous = now;
   hero.update(dt); structure.update(dt, 810.9);
-  if (hero.ready && !heroFinished) { heroFinished = true; needsSync = true; }
+  if (hero.ready && !heroFinished) { heroFinished = true; needsSync = true; resolveHeroReady(); }
   if (needsSync) { needsSync = false; syncModels(); }
   if (heroFinished && extrasReady && !clayFinal) {
     clayFinal = true; layers.rebuildClay(covered, discardUniforms); renderer.shadowMap.needsUpdate = true;

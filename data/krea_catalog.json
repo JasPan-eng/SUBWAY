@@ -110,10 +110,10 @@
       "placement": {
         "type": "footprints",
         "ids": [
-          250325879,
           250408578,
           250325872,
-          250325874
+          250325874,
+          250325876
         ]
       },
       "made": "2026-10-28"
@@ -141,11 +141,11 @@
         "type": "footprints",
         "ids": [
           250325829,
-          250317212,
           250317263,
-          250408711,
           250406608,
-          250405907
+          250405907,
+          250408659,
+          747249613
         ]
       },
       "made": "2026-10-28"
@@ -206,6 +206,146 @@
           250408641,
           250408637
         ]
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "prewar_6storey",
+      "name": "Six-storey pre-war apartment house",
+      "category": "building",
+      "description": "Tan brick pre-war apartment block with fire escapes, a stone entrance surround and a rooftop water tower.",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          713663436,
+          250317209,
+          1557323461
+        ]
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "auto_garage",
+      "name": "Graffiti auto garage",
+      "category": "building",
+      "description": "One-storey cinder-block repair garage with roll-up doors, covered in Bushwick graffiti murals.",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408714,
+          250317212,
+          250408711,
+          250406612
+        ]
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "brick_church",
+      "name": "Red brick church",
+      "category": "building",
+      "description": "Small 19th-century Brooklyn church with a corner bell tower, pointed-arch stained glass and an iron fence.",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250325879
+        ]
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "streetlight",
+      "name": "Cobra-head street light",
+      "category": "street",
+      "description": "Grey steel NYC street light with a curved arm and an oval sodium head.",
+      "placement": {
+        "type": "street",
+        "kinds": [
+          "primary",
+          "secondary",
+          "tertiary",
+          "residential",
+          "unclassified"
+        ],
+        "spacing": 32,
+        "setback": 0.6,
+        "sides": "alternate",
+        "height": 9.0,
+        "radius": 380,
+        "max": 260,
+        "jitter": 3,
+        "face": "street"
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "hydrant",
+      "name": "Fire hydrant",
+      "category": "street",
+      "description": "Silver NYC fire hydrant with a red top and chained caps.",
+      "placement": {
+        "type": "street",
+        "kinds": [
+          "primary",
+          "secondary",
+          "tertiary",
+          "residential"
+        ],
+        "spacing": 75,
+        "setback": 0.5,
+        "sides": "alternate",
+        "height": 0.85,
+        "radius": 320,
+        "max": 120,
+        "jitter": 10,
+        "face": "street"
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "bus_shelter",
+      "name": "Bus shelter",
+      "category": "street",
+      "description": "Steel and glass NYC bus shelter with a bench and a blank ad panel.",
+      "placement": {
+        "type": "street",
+        "kinds": [
+          "primary",
+          "secondary",
+          "tertiary"
+        ],
+        "nameMatch": "Broadway",
+        "spacing": 160,
+        "setback": 2.2,
+        "sides": "alternate",
+        "height": 2.6,
+        "radius": 420,
+        "max": 8,
+        "jitter": 15,
+        "face": "along"
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "street_tree",
+      "name": "London plane street tree",
+      "category": "street",
+      "description": "Young London plane tree in a square sidewalk pit with a low iron guard.",
+      "placement": {
+        "type": "street",
+        "kinds": [
+          "residential",
+          "tertiary",
+          "unclassified"
+        ],
+        "spacing": 11,
+        "setback": 1.1,
+        "sides": "both",
+        "height": 7.0,
+        "radius": 360,
+        "max": 700,
+        "jitter": 2.5,
+        "face": "along"
       },
       "made": "2026-10-28"
     }

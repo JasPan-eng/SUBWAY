@@ -23,6 +23,9 @@ RULES = {
     "frame_house": (9, 18, 4.5, 7.5, 6, 10.5, 10, 280),
     "brownstone": (12, 20, 5, 7.5, 10.5, 15, 8, 300),
     "corner_deli": (10, 20, 6, 10, 6, 9.5, 5, 240),
+    "prewar_6storey": (22, 45, 15, 35, 15, 26, 3, 380),
+    "auto_garage": (14, 35, 10, 25, 3, 7, 4, 360),
+    "brick_church": (22, 45, 12, 25, 9, 30, 1, 450),
 }
 
 
@@ -72,7 +75,7 @@ def main():
     cands.sort(key=lambda c: (c["d"], c["id"]))
     by_id = {m["id"]: m for m in catalog["models"]}
     # Rarer types first so the common ones do not take their footprints.
-    for mid in ["graffiti_loft", "ornate_corner", "corner_deli", "storefront_row", "brownstone", "walkup_4storey", "frame_house"]:
+    for mid in ["brick_church", "prewar_6storey", "auto_garage", "graffiti_loft", "ornate_corner", "corner_deli", "storefront_row", "brownstone", "walkup_4storey", "frame_house"]:
         if mid not in by_id:
             continue
         lmin, lmax, wmin, wmax, hmin, hmax, n, rmax = RULES[mid]

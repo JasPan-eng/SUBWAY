@@ -26,6 +26,18 @@ export function createNavigation(camera, canvas, target, routeHeading) {
     started = performance.now(); duration = reduced.matches ? 0 : ms;
   }
   controls.addEventListener('start', () => { started = -1; });
+  // Keep the focus point on the mapped neighbourhood (like Google Maps bounds): zoom-to-cursor while zooming
+  // out otherwise walks the target off the 450 m data radius and the view ends up on bare ground.
+  const BOUND = 500, excess = new THREE.Vector3();
+  controls.addEventListener('change', () => {
+    const t = controls.target;
+    const r = Math.hypot(t.x - target.x, t.z - target.z);
+    const dy = t.y - target.y;
+    if (r <= BOUND && Math.abs(dy) < 1e-6) return;
+    excess.set(r > BOUND ? (t.x - target.x) * (1 - BOUND / r) : 0, dy, r > BOUND ? (t.z - target.z) * (1 - BOUND / r) : 0);
+    t.sub(excess);
+    camera.position.sub(excess);
+  });
   function reset() { turn(target, 220, tilt, startHeading, 700); }
   function zoom(factor) {
     spherical.setFromVector3(offset.subVectors(camera.position, controls.target));
@@ -48,7 +60,8 @@ export function createNavigation(camera, canvas, target, routeHeading) {
     const distance = size.length() * 0.6 / Math.sin(limitingFov);
     turn(center, distance, Math.PI / 4, controls.getAzimuthalAngle(), 700);
   }
-  function typing(event) { return event.target.closest('input, textarea, button, a, [contenteditable]'); }
+  // Shortcuts keep working after a panel button was clicked; only text fields swallow them.
+  function typing(event) { return event.target.closest('input, textarea, select, [contenteditable]'); }
   window.addEventListener('keydown', (event) => {
     if (!active || typing(event) || event.ctrlKey || event.metaKey || event.altKey) return;
     const key = event.key.toLowerCase();

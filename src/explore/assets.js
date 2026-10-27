@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { alignPlan } from '../align.js';
 
 export function patchFog(material, fogUniforms) {
@@ -68,7 +69,53 @@ export function createAssetStore(base, fogUniforms) {
     cache.set(file, promise);
     return promise;
   }
-  return { load };
+  async function loadInstanced(file) {
+    const asset = await load(file);
+    if (asset.instanced) return asset.instanced;
+    const meshes = asset.group.children;
+    if (meshes.length === 1) {
+      asset.instanced = { geometry: meshes[0].geometry, material: meshes[0].material, size: asset.size };
+      return asset.instanced;
+    }
+    // A multi-node GLB still gets one InstancedMesh. Cache the combined geometry
+    // alongside the loader asset, preserving its lit, fog-patched materials.
+    const parts = meshes.map((mesh) => mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone());
+    const attributes = new Map();
+    for (const part of parts) for (const [name, attr] of Object.entries(part.attributes)) {
+      if (attributes.has(name) && attributes.get(name) !== attr.itemSize) {
+        for (const geometry of parts) geometry.dispose();
+        throw new Error('Incompatible model attributes');
+      }
+      attributes.set(name, attr.itemSize);
+    }
+    const materials = [], groups = [];
+    let offset = 0;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i], count = part.attributes.position.count;
+      // Normalise attribute storage so indexed/non-indexed GLB primitives can merge.
+      for (const [name, itemSize] of attributes) {
+        const source = part.getAttribute(name), values = new Float32Array(count * itemSize);
+        for (let vertex = 0; vertex < count; vertex++) for (let c = 0; c < itemSize; c++) {
+          values[vertex * itemSize + c] = source ? source.getComponent(vertex, c) : name === 'color' ? 1 : 0;
+        }
+        part.setAttribute(name, new THREE.BufferAttribute(values, itemSize));
+      }
+      const material = meshes[i].material, first = materials.length;
+      materials.push(...(Array.isArray(material) ? material : [material]));
+      if (Array.isArray(material)) {
+        for (const group of part.groups) groups.push({ start: offset + group.start, count: group.count, materialIndex: first + group.materialIndex });
+      } else groups.push({ start: offset, count, materialIndex: first });
+      part.clearGroups(); offset += count;
+    }
+    const geometry = mergeGeometries(parts, false);
+    for (const part of parts) part.dispose();
+    if (!geometry) throw new Error('Could not combine street prop geometry');
+    for (const group of groups) geometry.addGroup(group.start, group.count, group.materialIndex);
+    geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+    asset.instanced = { geometry, material: materials, size: asset.size };
+    return asset.instanced;
+  }
+  return { load, loadInstanced };
 }
 
 export function footprint(building) {

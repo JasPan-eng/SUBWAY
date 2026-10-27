@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-27T23:27:46+00:00",
+  "generated": "2026-10-27T23:39:37+00:00",
   "models": [
     {
       "id": "myrtle_station",
@@ -141,10 +141,10 @@
       "placement": {
         "type": "footprints",
         "ids": [
-          250325879,
           250408578,
           250325872,
-          250325874
+          250325874,
+          250325876
         ]
       }
     },
@@ -180,11 +180,11 @@
         "type": "footprints",
         "ids": [
           250325829,
-          250317212,
           250317263,
-          250408711,
           250406608,
-          250405907
+          250405907,
+          250408659,
+          747249613
         ]
       }
     },
@@ -257,6 +257,174 @@
           250408641,
           250408637
         ]
+      }
+    },
+    {
+      "id": "prewar_6storey",
+      "name": "Six-storey pre-war apartment house",
+      "category": "building",
+      "description": "Tan brick pre-war apartment block with fire escapes, a stone entrance surround and a rooftop water tower.",
+      "file": "props/krea/prewar_6storey.glb",
+      "thumb": "props/krea/thumbs/prewar_6storey.webp",
+      "ref": "props/krea/thumbs/prewar_6storey_ref.webp",
+      "bytes": 1043088,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          713663436,
+          250317209,
+          1557323461
+        ]
+      }
+    },
+    {
+      "id": "auto_garage",
+      "name": "Graffiti auto garage",
+      "category": "building",
+      "description": "One-storey cinder-block repair garage with roll-up doors, covered in Bushwick graffiti murals.",
+      "file": "props/krea/auto_garage.glb",
+      "thumb": "props/krea/thumbs/auto_garage.webp",
+      "ref": "props/krea/thumbs/auto_garage_ref.webp",
+      "bytes": 619508,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408714,
+          250317212,
+          250408711,
+          250406612
+        ]
+      }
+    },
+    {
+      "id": "brick_church",
+      "name": "Red brick church",
+      "category": "building",
+      "description": "Small 19th-century Brooklyn church with a corner bell tower, pointed-arch stained glass and an iron fence.",
+      "file": "props/krea/brick_church.glb",
+      "thumb": "props/krea/thumbs/brick_church.webp",
+      "ref": "props/krea/thumbs/brick_church_ref.webp",
+      "bytes": 970484,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250325879
+        ]
+      }
+    },
+    {
+      "id": "streetlight",
+      "name": "Cobra-head street light",
+      "category": "street",
+      "description": "Grey steel NYC street light with a curved arm and an oval sodium head.",
+      "file": "props/krea/streetlight.glb",
+      "thumb": "props/krea/thumbs/streetlight.webp",
+      "ref": "props/krea/thumbs/streetlight_ref.webp",
+      "bytes": 447028,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "street",
+        "kinds": [
+          "primary",
+          "secondary",
+          "tertiary",
+          "residential",
+          "unclassified"
+        ],
+        "spacing": 32,
+        "setback": 0.6,
+        "sides": "alternate",
+        "height": 9.0,
+        "radius": 380,
+        "max": 260,
+        "jitter": 3,
+        "face": "street"
+      }
+    },
+    {
+      "id": "hydrant",
+      "name": "Fire hydrant",
+      "category": "street",
+      "description": "Silver NYC fire hydrant with a red top and chained caps.",
+      "file": "props/krea/hydrant.glb",
+      "thumb": "props/krea/thumbs/hydrant.webp",
+      "ref": "props/krea/thumbs/hydrant_ref.webp",
+      "bytes": 775664,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "street",
+        "kinds": [
+          "primary",
+          "secondary",
+          "tertiary",
+          "residential"
+        ],
+        "spacing": 75,
+        "setback": 0.5,
+        "sides": "alternate",
+        "height": 0.85,
+        "radius": 320,
+        "max": 120,
+        "jitter": 10,
+        "face": "street"
+      }
+    },
+    {
+      "id": "bus_shelter",
+      "name": "Bus shelter",
+      "category": "street",
+      "description": "Steel and glass NYC bus shelter with a bench and a blank ad panel.",
+      "file": "props/krea/bus_shelter.glb",
+      "thumb": "props/krea/thumbs/bus_shelter.webp",
+      "ref": "props/krea/thumbs/bus_shelter_ref.webp",
+      "bytes": 232416,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "street",
+        "kinds": [
+          "primary",
+          "secondary",
+          "tertiary"
+        ],
+        "nameMatch": "Broadway",
+        "spacing": 160,
+        "setback": 2.2,
+        "sides": "alternate",
+        "height": 2.6,
+        "radius": 420,
+        "max": 8,
+        "jitter": 15,
+        "face": "along"
+      }
+    },
+    {
+      "id": "street_tree",
+      "name": "London plane street tree",
+      "category": "street",
+      "description": "Young London plane tree in a square sidewalk pit with a low iron guard.",
+      "file": "props/krea/street_tree.glb",
+      "thumb": "props/krea/thumbs/street_tree.webp",
+      "ref": "props/krea/thumbs/street_tree_ref.webp",
+      "bytes": 650616,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "street",
+        "kinds": [
+          "residential",
+          "tertiary",
+          "unclassified"
+        ],
+        "spacing": 11,
+        "setback": 1.1,
+        "sides": "both",
+        "height": 7.0,
+        "radius": 360,
+        "max": 700,
+        "jitter": 2.5,
+        "face": "along"
       }
     }
   ]

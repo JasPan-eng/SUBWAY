@@ -2,6 +2,16 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
+// Route-local east/north to the hero boxes' rotated root frame.
+export function insideHeroDiscard(x, y, discard) {
+  for (let i = 0; i < discard.uHeroCount.value; i++) {
+    const b = discard.uHeroBoxes.value[i], r = discard.uHeroRot.value[i];
+    const dx = -x - b.x, dz = y - b.y;
+    if (Math.abs(r.x * dx - r.y * dz) < b.z + 1 && Math.abs(r.y * dx + r.x * dz) < b.w + 1) return true;
+  }
+  return false;
+}
+
 function shape(pts) {
   const result = new THREE.Shape();
   pts.forEach(([x, y], i) => i ? result.lineTo(x, y) : result.moveTo(x, y));
@@ -63,13 +73,7 @@ export function createMapLayers(frame, block) {
     const parts = [];
     for (const building of block.buildings) {
       if (covered.has(String(building.id)) || building.pts.length < 3) continue;
-      let excluded = false;
-      for (let i = 0; i < discard.uHeroCount.value; i++) {
-        const b = discard.uHeroBoxes.value[i], r = discard.uHeroRot.value[i];
-        const dx = -building.x - b.x, dz = building.y - b.y;
-        if (Math.abs(r.x * dx - r.y * dz) < b.z + 1 && Math.abs(r.y * dx + r.x * dz) < b.w + 1) { excluded = true; break; }
-      }
-      if (excluded) continue;
+      if (insideHeroDiscard(building.x, building.y, discard)) continue;
       parts.push(new THREE.ExtrudeGeometry(shape(building.pts), { depth: Math.max(1, building.height), bevelEnabled: false, steps: 1, curveSegments: 1 }).rotateX(-Math.PI / 2).translate(0, -10.5, 0));
     }
     const geometry = merge(parts);
