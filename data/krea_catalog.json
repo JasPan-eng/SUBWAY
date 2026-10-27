@@ -7,7 +7,9 @@
       "category": "station",
       "description": "Mezzanine, glass-block elevator tower and street stair of the J/M/Z station, from Wikimedia Commons photos.",
       "published": "props/hero/myrtle_station.glb",
-      "placement": { "type": "hero" },
+      "placement": {
+        "type": "hero"
+      },
       "made": "2026-10-25"
     },
     {
@@ -16,7 +18,9 @@
       "category": "station",
       "description": "12 m covered side platform: green steel canopy on bracketed columns, yellow tactile edge, bench. Tiled 60 m at Myrtle.",
       "published": "props/hero/platform_canopy.glb",
-      "placement": { "type": "hero" },
+      "placement": {
+        "type": "hero"
+      },
       "made": "2026-10-26"
     },
     {
@@ -25,7 +29,9 @@
       "category": "station",
       "description": "12 m open side platform: double-globe lamp post, picket fence, concrete-cased column. Tiled at both platform ends.",
       "published": "props/hero/platform_open.glb",
-      "placement": { "type": "hero" },
+      "placement": {
+        "type": "hero"
+      },
       "made": "2026-10-26"
     },
     {
@@ -34,7 +40,9 @@
       "category": "structure",
       "description": "One section of the riveted green steel el over Broadway, repeated along the whole J route.",
       "published": "props/el_bent.glb",
-      "placement": { "type": "hero" },
+      "placement": {
+        "type": "hero"
+      },
       "made": "2026-10-25"
     },
     {
@@ -43,7 +51,9 @@
       "category": "building",
       "description": "Three-storey brick tenement with cornice, fire escapes and a shop at street level. Fitted to the nearest 3-storey footprints.",
       "published": "props/hero/bushwick_3storey.glb",
-      "placement": { "type": "hero" },
+      "placement": {
+        "type": "hero"
+      },
       "made": "2026-10-25"
     },
     {
@@ -52,8 +62,152 @@
       "category": "building",
       "description": "One-storey corner block with three storefronts and roof units, on the footprint across from the station.",
       "published": "props/hero/corner_fastfood.glb",
-      "placement": { "type": "hero" },
+      "placement": {
+        "type": "hero"
+      },
       "made": "2026-10-25"
+    },
+    {
+      "id": "walkup_4storey",
+      "name": "Four-storey walk-up",
+      "category": "building",
+      "description": "Red brick apartment walk-up with zig-zag fire escapes and two shops behind graffiti roll-down gates, from J-line window footage on Broadway.",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408676,
+          250408600,
+          1122173783,
+          250408689,
+          250408630,
+          250408672,
+          250408634,
+          250408690
+        ]
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "ornate_corner",
+      "name": "Ornate corner building",
+      "category": "building",
+      "description": "Late-1800s buff stone corner building with a rounded bay, arched top windows and a dentil cornice, from J-line window footage.",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250405932,
+          250408687,
+          250408643
+        ]
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "graffiti_loft",
+      "name": "Graffiti loft with water tower",
+      "category": "building",
+      "description": "Three-storey Bushwick brick warehouse covered in graffiti, steel factory windows, a wooden NYC water tower on the roof.",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250325879,
+          250408578,
+          250325872,
+          250325874
+        ]
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "el_street_stair",
+      "name": "El street stair",
+      "category": "station",
+      "description": "Street-level stair up to the el with green railings, a red-brown canopy and a subway globe, from Commons photos of J-line stations.",
+      "placement": {
+        "type": "route",
+        "s": 828.0,
+        "lateral": -11.0,
+        "yawDeg": 0,
+        "length": 9.0
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "storefront_row",
+      "name": "One-storey storefront row",
+      "category": "building",
+      "description": "Three small shops under the el on Broadway with coloured sign bands and tagged roll-down shutters.",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250325829,
+          250317212,
+          250317263,
+          250408711,
+          250406608,
+          250405907
+        ]
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "frame_house",
+      "name": "Bushwick frame house",
+      "category": "building",
+      "description": "Two-and-a-half storey row house in beige vinyl siding with a concrete stoop and chain-link front fence.",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250405989,
+          250408581,
+          250408620,
+          250408640,
+          250408598,
+          250406077,
+          250408606,
+          250408611,
+          250408618,
+          250408616
+        ]
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "brownstone",
+      "name": "Brooklyn brownstone",
+      "category": "building",
+      "description": "Brownstone row house with a high stoop, curved cast-iron railings, carved lintels and a bracketed cornice.",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408605,
+          250408602,
+          250408609,
+          250406018,
+          250406045,
+          250408626,
+          250317266,
+          250317261
+        ]
+      },
+      "made": "2026-10-28"
+    },
+    {
+      "id": "corner_deli",
+      "name": "Corner deli",
+      "category": "building",
+      "description": "Two-storey brick corner building with a yellow deli sign band, striped awnings and posters behind the glass.",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408615,
+          250408621,
+          250408614,
+          250408641,
+          250408637
+        ]
+      },
+      "made": "2026-10-28"
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-27T23:06:52+00:00",
+  "generated": "2026-10-27T23:21:58+00:00",
   "models": [
     {
       "id": "myrtle_station",
@@ -83,6 +83,87 @@
       "made": "2026-10-25",
       "placement": {
         "type": "hero"
+      }
+    },
+    {
+      "id": "walkup_4storey",
+      "name": "Four-storey walk-up",
+      "category": "building",
+      "description": "Red brick apartment walk-up with zig-zag fire escapes and two shops behind graffiti roll-down gates, from J-line window footage on Broadway.",
+      "file": "props/krea/walkup_4storey.glb",
+      "thumb": "props/krea/thumbs/walkup_4storey.webp",
+      "ref": "props/krea/thumbs/walkup_4storey_ref.webp",
+      "bytes": 931124,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408676,
+          250408600,
+          1122173783,
+          250408689,
+          250408630,
+          250408672,
+          250408634,
+          250408690
+        ]
+      }
+    },
+    {
+      "id": "ornate_corner",
+      "name": "Ornate corner building",
+      "category": "building",
+      "description": "Late-1800s buff stone corner building with a rounded bay, arched top windows and a dentil cornice, from J-line window footage.",
+      "file": "props/krea/ornate_corner.glb",
+      "thumb": "props/krea/thumbs/ornate_corner.webp",
+      "ref": "props/krea/thumbs/ornate_corner_ref.webp",
+      "bytes": 933004,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250405932,
+          250408687,
+          250408643
+        ]
+      }
+    },
+    {
+      "id": "graffiti_loft",
+      "name": "Graffiti loft with water tower",
+      "category": "building",
+      "description": "Three-storey Bushwick brick warehouse covered in graffiti, steel factory windows, a wooden NYC water tower on the roof.",
+      "file": "props/krea/graffiti_loft.glb",
+      "thumb": "props/krea/thumbs/graffiti_loft.webp",
+      "ref": "props/krea/thumbs/graffiti_loft_ref.webp",
+      "bytes": 1356632,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250325879,
+          250408578,
+          250325872,
+          250325874
+        ]
+      }
+    },
+    {
+      "id": "el_street_stair",
+      "name": "El street stair",
+      "category": "station",
+      "description": "Street-level stair up to the el with green railings, a red-brown canopy and a subway globe, from Commons photos of J-line stations.",
+      "file": "props/krea/el_street_stair.glb",
+      "thumb": "props/krea/thumbs/el_street_stair.webp",
+      "ref": "props/krea/thumbs/el_street_stair_ref.webp",
+      "bytes": 551756,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "route",
+        "s": 828.0,
+        "lateral": -11.0,
+        "yawDeg": 0,
+        "length": 9.0
       }
     }
   ]
