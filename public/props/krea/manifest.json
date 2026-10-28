@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-27T23:39:37+00:00",
+  "generated": "2026-10-28T00:07:12+00:00",
   "models": [
     {
       "id": "myrtle_station",
@@ -105,7 +105,19 @@
           250408630,
           250408672,
           250408634,
-          250408690
+          250408690,
+          250317275,
+          1553752314,
+          250317277,
+          250405891,
+          250317293,
+          250408694,
+          250408644,
+          250408668,
+          250408646,
+          884819074,
+          250405857,
+          250408667
         ]
       }
     },
@@ -184,7 +196,13 @@
           250406608,
           250405907,
           250408659,
-          747249613
+          747249613,
+          250406610,
+          250408656,
+          250326189,
+          777828907,
+          777828905,
+          250326140
         ]
       }
     },
@@ -202,15 +220,30 @@
         "type": "footprints",
         "ids": [
           250405989,
-          250408581,
-          250408620,
           250408640,
           250408598,
-          250406077,
           250408606,
           250408611,
           250408618,
-          250408616
+          250408616,
+          250408699,
+          250408623,
+          250325868,
+          250317250,
+          250317247,
+          250317246,
+          250317244,
+          250408625,
+          250408582,
+          250317214,
+          250317215,
+          250408685,
+          250408684,
+          250408683,
+          250405771,
+          250408679,
+          250317210,
+          250405943
         ]
       }
     },
@@ -234,7 +267,19 @@
           250406045,
           250408626,
           250317266,
-          250317261
+          250317261,
+          250317258,
+          250405895,
+          250406151,
+          250408633,
+          250408651,
+          250317345,
+          250317243,
+          250317241,
+          250408599,
+          250317239,
+          250317238,
+          250317235
         ]
       }
     },
@@ -255,7 +300,12 @@
           250408621,
           250408614,
           250408641,
-          250408637
+          250408637,
+          250408581,
+          250408587,
+          250408620,
+          250317268,
+          250406077
         ]
       }
     },
@@ -425,6 +475,105 @@
         "max": 700,
         "jitter": 2.5,
         "face": "along"
+      }
+    },
+    {
+      "id": "bay_rowhouse",
+      "name": "Bay-window brick row house",
+      "category": "building",
+      "description": "Three-storey red-orange brick row house with a full-height rounded bay and a short stoop. Hunyuan3D Rapid tier.",
+      "file": "props/krea/bay_rowhouse.glb",
+      "thumb": "props/krea/thumbs/bay_rowhouse.webp",
+      "ref": "props/krea/thumbs/bay_rowhouse_ref.webp",
+      "bytes": 292860,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408639,
+          250325856,
+          250317317,
+          250406583,
+          250406514,
+          250317310,
+          250405996,
+          250406029,
+          250325842,
+          250326204,
+          250406052,
+          250317336,
+          250406085,
+          250317237,
+          250317313,
+          250325841,
+          250317236,
+          250326038,
+          250408662,
+          250317234,
+          250317330,
+          250317231,
+          250317331,
+          250317230,
+          250317337
+        ]
+      }
+    },
+    {
+      "id": "mixed_use_3storey",
+      "name": "Three-storey mixed-use building",
+      "category": "building",
+      "description": "Shop at street level with two brick apartment floors and a fire escape, from J-line footage. Tripo H3.1 tier.",
+      "file": "props/krea/mixed_use_3storey.glb",
+      "thumb": "props/krea/thumbs/mixed_use_3storey.webp",
+      "ref": "props/krea/thumbs/mixed_use_3storey_ref.webp",
+      "bytes": 295524,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408576,
+          250405883,
+          250408636,
+          250406100,
+          250325851,
+          250405863,
+          250408650,
+          250408619,
+          250408632,
+          250408649,
+          250408648,
+          250405981,
+          250405873,
+          250408577,
+          1125004011,
+          250408588,
+          250408594,
+          250408607,
+          250408612,
+          250408629,
+          250325844,
+          250325858,
+          250317242,
+          250325843,
+          250405964
+        ]
+      }
+    },
+    {
+      "id": "public_school",
+      "name": "Public school",
+      "category": "building",
+      "description": "Early-1900s four-storey red brick and limestone NYC school with a schoolyard. Hunyuan3D Rapid tier.",
+      "file": "props/krea/public_school.glb",
+      "thumb": "props/krea/thumbs/public_school.webp",
+      "ref": "props/krea/thumbs/public_school_ref.webp",
+      "bytes": 371984,
+      "made": "2026-10-28",
+      "placement": {
+        "type": "footprints",
+        "ids": [
+          250408571
+        ]
       }
     }
   ]

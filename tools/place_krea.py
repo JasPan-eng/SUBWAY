@@ -16,16 +16,20 @@ HERO_USED = {250317334, 1050009842, 250325864, 1050009843, 298198839, 1050009844
              250408610}
 # id: (min length, max length, min width, max width, min height, max height, how many, max distance from origin)
 RULES = {
-    "walkup_4storey": (12, 30, 6, 11, 11.5, 18, 8, 260),
+    "walkup_4storey": (12, 30, 6, 11, 11.5, 18, 20, 330),
     "ornate_corner": (12, 26, 8, 14, 9, 15, 3, 220),
     "graffiti_loft": (20, 60, 14, 40, 7, 18, 4, 320),
-    "storefront_row": (10, 30, 8, 25, 2.5, 6.5, 6, 260),
-    "frame_house": (9, 18, 4.5, 7.5, 6, 10.5, 10, 280),
-    "brownstone": (12, 20, 5, 7.5, 10.5, 15, 8, 300),
-    "corner_deli": (10, 20, 6, 10, 6, 9.5, 5, 240),
+    "storefront_row": (10, 30, 8, 25, 2.5, 6.5, 12, 330),
+    "frame_house": (9, 18, 4.5, 7.5, 6, 10.5, 25, 330),
+    "brownstone": (12, 20, 5, 7.5, 10.5, 15, 20, 330),
+    "corner_deli": (10, 20, 6, 10, 6, 9.5, 10, 300),
     "prewar_6storey": (22, 45, 15, 35, 15, 26, 3, 380),
     "auto_garage": (14, 35, 10, 25, 3, 7, 4, 360),
     "brick_church": (22, 45, 12, 25, 9, 30, 1, 450),
+    "bay_rowhouse": (10, 20, 5, 7.5, 8, 13, 25, 330),
+    "mixed_use_3storey": (12, 26, 5.5, 9, 8.5, 13, 25, 330),
+    "public_school": (40, 90, 15, 45, 12, 25, 1, 450),
+    "nycha_tower": (30, 80, 12, 45, 15, 60, 2, 450),
 }
 
 
@@ -75,7 +79,7 @@ def main():
     cands.sort(key=lambda c: (c["d"], c["id"]))
     by_id = {m["id"]: m for m in catalog["models"]}
     # Rarer types first so the common ones do not take their footprints.
-    for mid in ["brick_church", "prewar_6storey", "auto_garage", "graffiti_loft", "ornate_corner", "corner_deli", "storefront_row", "brownstone", "walkup_4storey", "frame_house"]:
+    for mid in ["public_school", "nycha_tower", "brick_church", "prewar_6storey", "auto_garage", "graffiti_loft", "ornate_corner", "corner_deli", "storefront_row", "brownstone", "walkup_4storey", "frame_house", "mixed_use_3storey", "bay_rowhouse"]:
         if mid not in by_id:
             continue
         lmin, lmax, wmin, wmax, hmin, hmax, n, rmax = RULES[mid]
